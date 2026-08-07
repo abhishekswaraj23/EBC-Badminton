@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EBC Badminton Clash Live Standings & Tournament Hub</title>
+  <style>
+    @page {
+      size: letter;
+      margin: 0.35in;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1F2937;
+      margin: 0;
+      padding: 8px;
+      background-color: #F8FAFC;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* HEADER STYLES */
+    .header-container {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #1E3A8A;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .ebc-logo {
+      width: 80px;
+      height: auto;
+    }
+    .title-area {
+      text-align: right;
+    }
+    .title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #1E3A8A;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+    .subtitle {
+      font-size: 10px;
+      font-weight: bold;
+      color: #3B82F6;
+      margin-top: 2px;
+    }
+
+    /* EVENT DETAILS BANNER */
+    .event-info {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #F3F4F6;
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 11px;
+      margin-bottom: 12px;
+      gap: 6px;
+    }
+    
+    .status-pill {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 10px;
+      text-transform: uppercase;
+      display: inline-block;
+    }
+    .status-admin { background-color: #DC2626; color: white; }
+    .status-viewer { background-color: #10B981; color: white; }
+
+    /* ADMIN CONTROLS BAR */
+    .admin-controls {
+      display: none;
+      background-color: #FEE2E2;
+      border: 1px solid #FCA5A5;
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 12px;
+      text-align: right;
+    }
+    .btn-clear {
+      background-color: #DC2626;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      font-size: 10px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-clear:hover { background-color: #B91C1C; }
+
+    /* SECTION HEADERS */
+    .section-header {
+      font-size: 12px;
+      font-weight: bold;
+      color: #1E3A8A;
+      margin-top: 12px;
+      margin-bottom: 6px;
+      border-bottom: 1.5px solid #1E3A8A;
+      padding-bottom: 3px;
+      text-transform: uppercase;
+    }
+    .knockout-header {
+      color: #D97706;
+      border-bottom-color: #D97706;
+    }
+
+    /* FULL WIDTH NON-SCROLLABLE TABLE CONTAINER */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: hidden; /* Prevents horizontal scrollbar entirely */
+      margin-bottom: 8px;
+    }
+
+    /* TABLES FIT TO 100% WIDTH */
+    table {
+      width: 100%;
+      table-layout: fixed; /* Enforces strict fitting to screen width */
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 0.5px solid #E5E7EB;
+      padding: 5px 2px;
+      font-size: 10px;
+      text-align: center;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    th {
+      font-weight: bold;
+      color: #FFFFFF;
+      background-color: #1E3A8A;
+    }
+    .knockout-table th {
+      background-color: #D97706;
+    }
+    tr.light-bg {
+      background-color: #F9FAFB;
+    }
+
+    /* VERTICAL TEAMS CELL LAYOUT */
+    .teams-cell {
+      text-align: left;
+      padding: 3px 4px;
+      line-height: 1.2;
+    }
+    .match-tag {
+      display: inline-block;
+      font-size: 8.5px;
+      font-weight: 800;
+      color: #1E3A8A;
+      background-color: #DBEAFE;
+      padding: 1px 3px;
+      border-radius: 3px;
+      margin-right: 2px;
+      margin-bottom: 2px;
+    }
+    .team-line {
+      display: block;
+      font-weight: 600;
+      font-size: 10px;
+    }
+
+    /* WINNER HIGHLIGHTING */
+    .winner-highlight {
+      font-weight: 800 !important;
+      color: #059669 !important;
+      background-color: #ECFDF5;
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    /* 2x2 GRID FOR TEAMS & STANDINGS COMBINED */
+    .grid-2x2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .grid-box {
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .grid-box-title {
+      font-size: 10.5px;
+      font-weight: bold;
+      padding: 4px 6px;
+      color: #FFFFFF;
+      text-align: left;
+    }
+    .bg-a { background-color: #1E40AF; }
+    .bg-b { background-color: #065F46; }
+    .bg-c { background-color: #9D174D; }
+    .bg-d { background-color: #92400E; }
+
+    .inner-table {
+      width: 100%;
+      table-layout: fixed;
+      margin-bottom: 0;
+    }
+    .inner-table th {
+      background-color: #F3F4F6;
+      color: #374151;
+      font-size: 9px;
+      padding: 3px 1px;
+    }
+    .inner-table td {
+      font-size: 9.5px;
+      padding: 4px 1px;
+    }
+
+    /* GROUP BADGES */
+    .tag {
+      font-weight: bold;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-size: 9px;
+      display: inline-block;
+    }
+    .tag-a { background-color: #DBEAFE; color: #1E40AF; }
+    .tag-b { background-color: #D1FAE5; color: #065F46; }
+    .tag-c { background-color: #FCE7F3; color: #9D174D; }
+    .tag-d { background-color: #FEF3C7; color: #92400E; }
+    .tag-ko { background-color: #FEF3C7; color: #B45309; }
+
+    /* DYNAMIC TIME CELL LAYOUT ON MOBILE */
+    .time-cell {
+      line-height: 1.1;
+      font-size: 9.5px;
+    }
+    .court-badge {
+      display: block;
+      font-weight: bold;
+      color: #4B5563;
+      font-size: 8.5px;
+      margin-top: 2px;
+    }
+
+    /* INPUT SCORE STYLES */
+    .score-input-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      flex-wrap: wrap;
+    }
+    .score-input {
+      width: 26px;
+      height: 22px;
+      padding: 1px;
+      font-size: 10px;
+      font-weight: bold;
+      text-align: center;
+      border: 1px solid #94A3B8;
+      border-radius: 3px;
+    }
+    .set-box {
+      display: flex;
+      align-items: center;
+      background: #F1F5F9;
+      padding: 2px 3px;
+      border-radius: 3px;
+      border: 0.5px solid #CBD5E1;
+      gap: 1px;
+      font-size: 8px;
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+    .btn-save {
+      background-color: #2563EB;
+      color: white;
+      border: none;
+      padding: 3px 6px;
+      font-size: 9px;
+      font-weight: bold;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .btn-save:hover { background-color: #1D4ED8; }
+    .score-display-read {
+      font-size: 10px;
+      font-weight: 700;
+      color: #1E3A8A;
+      word-break: break-all;
+    }
+
+    /* RESPONSIVE LAYOUT adjustments */
+    @media (max-width: 600px) {
+      body {
+        padding: 2px;
+      }
+      .container {
+        padding: 6px;
+      }
+      .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+      .title-area {
+        text-align: left;
+      }
+      .grid-2x2 {
+        grid-template-columns: 1fr; /* Stacks standings on smaller mobile screens */
+      }
+      .event-info {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+
+  <!-- Firebase Compatibility Libraries -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <!-- HEADER WITH LOGO -->
+  <div class="header-container">
+    <div class="logo-container">
+      <svg class="ebc-logo" viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg">
+        <g id="shuttle">
+          <path d="M 30 20 L 70 32 L 35 42 Z" fill="#1E3A8A" />
+          <path d="M 25 30 L 72 40 L 28 52 Z" fill="#3B82F6" />
+          <path d="M 22 42 L 75 48 L 24 62 Z" fill="#1E3A8A" />
+          <path d="M 25 55 L 72 57 L 28 72 Z" fill="#3B82F6" />
+          <path d="M 30 67 L 70 65 L 35 82 Z" fill="#1E3A8A" />
+          <line x1="45" y1="25" x2="43" y2="78" stroke="#10B981" stroke-width="2.5" />
+          <line x1="60" y1="29" x2="58" y2="73" stroke="#10B981" stroke-width="2.5" />
+          <path d="M 75 35 C 88 35 98 43 98 52 C 98 61 88 69 75 69 Z" fill="#10B981" />
+        </g>
+        <text x="105" y="62" font-family="Arial, sans-serif" font-weight="900" font-style="italic" font-size="52" fill="#1E3A8A" letter-spacing="-1">EBC</text>
+        <text x="108" y="80" font-family="Arial, sans-serif" font-weight="bold" font-size="10" fill="#10B981" letter-spacing="1.5">PLAY. SMASH. REPEAT.</text>
+      </svg>
+    </div>
+    <div class="title-area">
+      <div class="title">EBC BADMINTON CLASH</div>
+      <div class="subtitle">Complete Tournament Hub & Live Standings</div>
+    </div>
+  </div>
+
+  <!-- EVENT DETAILS BANNER -->
+  <div class="event-info">
+    <div><strong>Date & Time:</strong> 8th August, 8:00 PM Onwards</div>
+    <div><strong>Venue:</strong> Shuttlers zone, Wakad</div>
+    <div><strong>Rules:</strong> League & QF: 1 Set (21 pts) | SF & Final: Best of 3 Sets (15 pts)</div>
+    <div id="mode-indicator" class="status-pill status-viewer">Live Spectator Mode</div>
+  </div>
+
+  <!-- ADMIN CONTROL BAR -->
+  <div id="admin-bar" class="admin-controls">
+    <button class="btn-clear" onclick="clearAllScores()">⚠️ Reset/Clear All Tournament Scores</button>
+  </div>
+
+  <!-- COMBINED TEAMS DIRECTORY & GROUP STANDINGS -->
+  <div class="section-header">Teams & Group Standings</div>
+  <div class="grid-2x2">
+    
+    <!-- GROUP A -->
+    <div class="grid-box">
+      <div class="grid-box-title bg-a">Group A</div>
+      <div class="table-wrapper">
+        <table class="inner-table" id="table-group-a">
+          <thead>
+            <tr>
+              <th style="width:28%; text-align:left; padding-left:2px;">Team</th>
+              <th style="width:28%; text-align:left; padding-left:2px;">Players</th>
+              <th style="width:6%">P</th>
+              <th style="width:6%">W</th>
+              <th style="width:6%">L</th>
+              <th style="width:8%">+</th>
+              <th style="width:8%">-</th>
+              <th style="width:10%">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-team="Turbo Shuttlers">
+              <td style="text-align:left; padding-left:2px;">Turbo Shuttlers</td>
+              <td style="text-align:left; padding-left:2px;">Brajesh & Rajesh</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+            <tr class="light-bg" data-team="Bindaas Baddies">
+              <td style="text-align:left; padding-left:2px;">Bindaas Baddies</td>
+              <td style="text-align:left; padding-left:2px;">Anamika & Sam</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+            <tr data-team="Bliss Smashers">
+              <td style="text-align:left; padding-left:2px;">Bliss Smashers</td>
+              <td style="text-align:left; padding-left:2px;">Naresh & Bholesh</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+            <tr class="light-bg" data-team="Smash Rebels">
+              <td style="text-align:left; padding-left:2px;">Smash Rebels</td>
+              <td style="text-align:left; padding-left:2px;">Vinod & Ashok</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GROUP B -->
+    <div class="grid-box">
+      <div class="grid-box-title bg-b">Group B</div>
+      <div class="table-wrapper">
+        <table class="inner-table" id="table-group-b">
+          <thead>
+            <tr>
+              <th style="width:28%; text-align:left; padding-left:2px;">Team</th>
+              <th style="width:28%; text-align:left; padding-left:2px;">Players</th>
+              <th style="width:6%">P</th>
+              <th style="width:6%">W</th>
+              <th style="width:6%">L</th>
+              <th style="width:8%">+</th>
+              <th style="width:8%">-</th>
+              <th style="width:10%">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-team="Mighty Tigers">
+              <td style="text-align:left; padding-left:2px;">Mighty Tigers</td>
+              <td style="text-align:left; padding-left:2px;">Abhimanyu & Vaibhav</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+            <tr class="light-bg" data-team="DevilSlayers">
+              <td style="text-align:left; padding-left:2px;">DevilSlayers</td>
+              <td style="text-align:left; padding-left:2px;">Abhishek & Pritish</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+            <tr data-team="Ace Smashers">
+              <td style="text-align:left; padding-left:2px;">Ace Smashers</td>
+              <td style="text-align:left; padding-left:2px;">Abhishek S & Sudhanshu</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+            <tr class="light-bg" data-team="Duo Threat">
+              <td style="text-align:left; padding-left:2px;">Duo Threat</td>
+              <td style="text-align:left; padding-left:2px;">Sameer & Godand</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GROUP C -->
+    <div class="grid-box">
+      <div class="grid-box-title bg-c">Group C</div>
+      <div class="table-wrapper">
+        <table class="inner-table" id="table-group-c">
+          <thead>
+            <tr>
+              <th style="width:28%; text-align:left; padding-left:2px;">Team</th>
+              <th style="width:28%; text-align:left; padding-left:2px;">Players</th>
+              <th style="width:6%">P</th>
+              <th style="width:6%">W</th>
+              <th style="width:6%">L</th>
+              <th style="width:8%">+</th>
+              <th style="width:8%">-</th>
+              <th style="width:10%">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-team="Thunder Strikers">
+              <td style="text-align:left; padding-left:2px;">Thunder Strikers</td>
+              <td style="text-align:left; padding-left:2px;">Ajay & Meeta</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+            <tr class="light-bg" data-team="KingSlayers">
+              <td style="text-align:left; padding-left:2px;">KingSlayers</td>
+              <td style="text-align:left; padding-left:2px;">Ketan & Swapnil</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+            <tr data-team="Smash Brothers">
+              <td style="text-align:left; padding-left:2px;">Smash Brothers</td>
+              <td style="text-align:left; padding-left:2px;">Archit & Nihar</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+            <tr class="light-bg" data-team="Cloud9">
+              <td style="text-align:left; padding-left:2px;">Cloud9</td>
+              <td style="text-align:left; padding-left:2px;">Sunil & Kundan</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GROUP D -->
+    <div class="grid-box">
+      <div class="grid-box-title bg-d">Group D</div>
+      <div class="table-wrapper">
+        <table class="inner-table" id="table-group-d">
+          <thead>
+            <tr>
+              <th style="width:28%; text-align:left; padding-left:2px;">Team</th>
+              <th style="width:28%; text-align:left; padding-left:2px;">Players</th>
+              <th style="width:6%">P</th>
+              <th style="width:6%">W</th>
+              <th style="width:6%">L</th>
+              <th style="width:8%">+</th>
+              <th style="width:8%">-</th>
+              <th style="width:10%">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-team="ShadowSlayers">
+              <td style="text-align:left; padding-left:2px;">ShadowSlayers</td>
+              <td style="text-align:left; padding-left:2px;">Chandan & Abhijit</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+            <tr class="light-bg" data-team="court king">
+              <td style="text-align:left; padding-left:2px;">court king</td>
+              <td style="text-align:left; padding-left:2px;">Sunny & Omkar</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+            <tr data-team="Roadies">
+              <td style="text-align:left; padding-left:2px;">Roadies</td>
+              <td style="text-align:left; padding-left:2px;">Rohit & Dinesh</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+            <tr class="light-bg" data-team="Court Chaos">
+              <td style="text-align:left; padding-left:2px;">Court Chaos</td>
+              <td style="text-align:left; padding-left:2px;">Yash & Bhakti</td>
+              <td class="p">0</td><td class="w">0</td><td class="l">0</td><td class="pf">0</td><td class="pa">0</td><td class="pts">0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- GROUP MATCH SCHEDULE -->
+  <div class="section-header">Group Stage Schedule (1 Set - 21 Points)</div>
+  <div class="table-wrapper">
+    <table id="group-schedule" class="match-table">
+      <thead>
+        <tr>
+          <th style="width:18%">Grp / Ct</th>
+          <th style="width:18%">Time</th>
+          <th style="width:40%">Teams</th>
+          <th style="width:24%">Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Slot 1: 08:00 PM -->
+        <tr data-id="M1" data-group="C" data-type="single"><td><span class="tag tag-c">Grp C</span><span class="court-badge">Ct 3</span></td><td class="time-cell">08:00 PM</td><td class="teams-cell"><span class="match-tag">[M1]</span><span class="team-line team-a">Thunder Strikers</span><span class="team-line team-b">KingSlayers</span></td><td class="score-cell"></td></tr>
+        <tr data-id="M2" data-group="C" data-type="single"><td><span class="tag tag-c">Grp C</span><span class="court-badge">Ct 4</span></td><td class="time-cell">08:00 PM</td><td class="teams-cell"><span class="match-tag">[M2]</span><span class="team-line team-a">Smash Brothers</span><span class="team-line team-b">Cloud9</span></td><td class="score-cell"></td></tr>
+        <tr data-id="M3" data-group="D" data-type="single"><td><span class="tag tag-d">Grp D</span><span class="court-badge">Ct 5</span></td><td class="time-cell">08:00 PM</td><td class="teams-cell"><span class="match-tag">[M3]</span><span class="team-line team-a">ShadowSlayers</span><span class="team-line team-b">court king</span></td><td class="score-cell"></td></tr>
+        
+        <!-- Slot 2: 08:15 PM -->
+        <tr class="light-bg" data-id="M4" data-group="D" data-type="single"><td><span class="tag tag-d">Grp D</span><span class="court-badge">Ct 5</span></td><td class="time-cell">08:15 PM</td><td class="teams-cell"><span class="match-tag">[M4]</span><span class="team-line team-a">Roadies</span><span class="team-line team-b">Court Chaos</span></td><td class="score-cell"></td></tr>
+        <tr class="light-bg" data-id="M5" data-group="A" data-type="single"><td><span class="tag tag-a">Grp A</span><span class="court-badge">Ct 3</span></td><td class="time-cell">08:15 PM</td><td class="teams-cell"><span class="match-tag">[M5]</span><span class="team-line team-a">Turbo Shuttlers</span><span class="team-line team-b">Bindaas Baddies</span></td><td class="score-cell"></td></tr>
+        <tr class="light-bg" data-id="M6" data-group="A" data-type="single"><td><span class="tag tag-a">Grp A</span><span class="court-badge">Ct 4</span></td><td class="time-cell">08:15 PM</td><td class="teams-cell"><span class="match-tag">[M6]</span><span class="team-line team-a">Bliss Smashers</span><span class="team-line team-b">Smash Rebels</span></td><td class="score-cell"></td></tr>
+
+        <!-- Slot 3: 08:30 PM -->
+        <tr data-id="M7" data-group="B" data-type="single"><td><span class="tag tag-b">Grp B</span><span class="court-badge">Ct 5</span></td><td class="time-cell">08:30 PM</td><td class="teams-cell"><span class="match-tag">[M7]</span><span class="team-line team-a">Mighty Tigers</span><span class="team-line team-b">DevilSlayers</span></td><td class="score-cell"></td></tr>
+        <tr data-id="M8" data-group="C" data-type="single"><td><span class="tag tag-c">Grp C</span><span class="court-badge">Ct 3</span></td><td class="time-cell">08:30 PM</td><td class="teams-cell"><span class="match-tag">[M8]</span><span class="team-line team-a">Thunder Strikers</span><span class="team-line team-b">Smash Brothers</span></td><td class="score-cell"></td></tr>
+        <tr data-id="M9" data-group="C" data-type="single"><td><span class="tag tag-c">Grp C</span><span class="court-badge">Ct 4</span></td><td class="time-cell">08:30 PM</td><td class="teams-cell"><span class="match-tag">[M9]</span><span class="team-line team-a">KingSlayers</span><span class="team-line team-b">Cloud9</span></td><td class="score-cell"></td></tr>
+
+        <!-- Slot 4: 08:45 PM -->
+        <tr class="light-bg" data-id="M10" data-group="B" data-type="single"><td><span class="tag tag-b">Grp B</span><span class="court-badge">Ct 5</span></td><td class="time-cell">08:45 PM</td><td class="teams-cell"><span class="match-tag">[M10]</span><span class="team-line team-a">Ace Smashers</span><span class="team-line team-b">Duo Threat</span></td><td class="score-cell"></td></tr>
+        <tr class="light-bg" data-id="M11" data-group="D" data-type="single"><td><span class="tag tag-d">Grp D</span><span class="court-badge">Ct 3</span></td><td class="time-cell">08:45 PM</td><td class="teams-cell"><span class="match-tag">[M11]</span><span class="team-line team-a">ShadowSlayers</span><span class="team-line team-b">Roadies</span></td><td class="score-cell"></td></tr>
+        <tr class="light-bg" data-id="M12" data-group="D" data-type="single"><td><span class="tag tag-d">Grp D</span><span class="court-badge">Ct 4</span></td><td class="time-cell">08:45 PM</td><td class="teams-cell"><span class="match-tag">[M12]</span><span class="team-line team-a">court king</span><span class="team-line team-b">Court Chaos</span></td><td class="score-cell"></td></tr>
+
+        <!-- Slot 5: 09:00 PM -->
+        <tr data-id="M13" data-group="A" data-type="single"><td><span class="tag tag-a">Grp A</span><span class="court-badge">Ct 3</span></td><td class="time-cell">09:00 PM</td><td class="teams-cell"><span class="match-tag">[M13]</span><span class="team-line team-a">Turbo Shuttlers</span><span class="team-line team-b">Bliss Smashers</span></td><td class="score-cell"></td></tr>
+        <tr data-id="M14" data-group="A" data-type="single"><td><span class="tag tag-a">Grp A</span><span class="court-badge">Ct 4</span></td><td class="time-cell">09:00 PM</td><td class="teams-cell"><span class="match-tag">[M14]</span><span class="team-line team-a">Bindaas Baddies</span><span class="team-line team-b">Smash Rebels</span></td><td class="score-cell"></td></tr>
+        <tr data-id="M15" data-group="B" data-type="single"><td><span class="tag tag-b">Grp B</span><span class="court-badge">Ct 5</span></td><td class="time-cell">09:00 PM</td><td class="teams-cell"><span class="match-tag">[M15]</span><span class="team-line team-a">Mighty Tigers</span><span class="team-line team-b">Ace Smashers</span></td><td class="score-cell"></td></tr>
+
+        <!-- Slot 6: 09:15 PM -->
+        <tr class="light-bg" data-id="M16" data-group="B" data-type="single"><td><span class="tag tag-b">Grp B</span><span class="court-badge">Ct 5</span></td><td class="time-cell">09:15 PM</td><td class="teams-cell"><span class="match-tag">[M16]</span><span class="team-line team-a">DevilSlayers</span><span class="team-line team-b">Duo Threat</span></td><td class="score-cell"></td></tr>
+        <tr class="light-bg" data-id="M17" data-group="C" data-type="single"><td><span class="tag tag-c">Grp C</span><span class="court-badge">Ct 3</span></td><td class="time-cell">09:15 PM</td><td class="teams-cell"><span class="match-tag">[M17]</span><span class="team-line team-a">Thunder Strikers</span><span class="team-line team-b">Cloud9</span></td><td class="score-cell"></td></tr>
+        <tr class="light-bg" data-id="M18" data-group="C" data-type="single"><td><span class="tag tag-c">Grp C</span><span class="court-badge">Ct 4</span></td><td class="time-cell">09:15 PM</td><td class="teams-cell"><span class="match-tag">[M18]</span><span class="team-line team-a">KingSlayers</span><span class="team-line team-b">Smash Brothers</span></td><td class="score-cell"></td></tr>
+
+        <!-- Slot 7: 09:30 PM -->
+        <tr data-id="M19" data-group="D" data-type="single"><td><span class="tag tag-d">Grp D</span><span class="court-badge">Ct 3</span></td><td class="time-cell">09:30 PM</td><td class="teams-cell"><span class="match-tag">[M19]</span><span class="team-line team-a">ShadowSlayers</span><span class="team-line team-b">Court Chaos</span></td><td class="score-cell"></td></tr>
+        <tr data-id="M20" data-group="D" data-type="single"><td><span class="tag tag-d">Grp D</span><span class="court-badge">Ct 4</span></td><td class="time-cell">09:30 PM</td><td class="teams-cell"><span class="match-tag">[M20]</span><span class="team-line team-a">court king</span><span class="team-line team-b">Roadies</span></td><td class="score-cell"></td></tr>
+        <tr data-id="M21" data-group="A" data-type="single"><td><span class="tag tag-a">Grp A</span><span class="court-badge">Ct 5</span></td><td class="time-cell">09:30 PM</td><td class="teams-cell"><span class="match-tag">[M21]</span><span class="team-line team-a">Turbo Shuttlers</span><span class="team-line team-b">Smash Rebels</span></td><td class="score-cell"></td></tr>
+
+        <!-- Slot 8: 09:45 PM -->
+        <tr class="light-bg" data-id="M22" data-group="A" data-type="single"><td><span class="tag tag-a">Grp A</span><span class="court-badge">Ct 5</span></td><td class="time-cell">09:45 PM</td><td class="teams-cell"><span class="match-tag">[M22]</span><span class="team-line team-a">Bindaas Baddies</span><span class="team-line team-b">Bliss Smashers</span></td><td class="score-cell"></td></tr>
+        <tr class="light-bg" data-id="M23" data-group="B" data-type="single"><td><span class="tag tag-b">Grp B</span><span class="court-badge">Ct 3</span></td><td class="time-cell">09:45 PM</td><td class="teams-cell"><span class="match-tag">[M23]</span><span class="team-line team-a">Mighty Tigers</span><span class="team-line team-b">Duo Threat</span></td><td class="score-cell"></td></tr>
+        <tr class="light-bg" data-id="M24" data-group="B" data-type="single"><td><span class="tag tag-b">Grp B</span><span class="court-badge">Ct 4</span></td><td class="time-cell">09:45 PM</td><td class="teams-cell"><span class="match-tag">[M24]</span><span class="team-line team-a">DevilSlayers</span><span class="team-line team-b">Ace Smashers</span></td><td class="score-cell"></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- KNOCKOUT STAGE -->
+  <div class="section-header knockout-header">Knockout Stage</div>
+  <div class="table-wrapper">
+    <table id="knockout-schedule" class="match-table knockout-table">
+      <thead>
+        <tr>
+          <th style="width:18%">Stage / Ct</th>
+          <th style="width:18%">Time</th>
+          <th style="width:40%">Teams</th>
+          <th style="width:24%">Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-id="QF1" data-type="single"><td><span class="tag tag-ko">QF (21p)</span><span class="court-badge">Ct 4</span></td><td class="time-cell">10:00 PM</td><td class="teams-cell"><span class="match-tag">[QF1]</span><span class="team-line team-a">A1</span><span class="team-line team-b">D2</span></td><td class="score-cell"></td></tr>
+        <tr class="light-bg" data-id="QF2" data-type="single"><td><span class="tag tag-ko">QF (21p)</span><span class="court-badge">Ct 5</span></td><td class="time-cell">10:00 PM</td><td class="teams-cell"><span class="match-tag">[QF2]</span><span class="team-line team-a">B1</span><span class="team-line team-b">C2</span></td><td class="score-cell"></td></tr>
+        <tr data-id="QF3" data-type="single"><td><span class="tag tag-ko">QF (21p)</span><span class="court-badge">Ct 4</span></td><td class="time-cell">10:15 PM</td><td class="teams-cell"><span class="match-tag">[QF3]</span><span class="team-line team-a">A2</span><span class="team-line team-b">C1</span></td><td class="score-cell"></td></tr>
+        <tr class="light-bg" data-id="QF4" data-type="single"><td><span class="tag tag-ko">QF (21p)</span><span class="court-badge">Ct 5</span></td><td class="time-cell">10:15 PM</td><td class="teams-cell"><span class="match-tag">[QF4]</span><span class="team-line team-a">B2</span><span class="team-line team-b">D1</span></td><td class="score-cell"></td></tr>
+        <tr data-id="SF1" data-type="sets"><td><span class="tag tag-ko">SF (3x15)</span><span class="court-badge">Ct 4</span></td><td class="time-cell">10:35 PM</td><td class="teams-cell"><span class="match-tag">[SF1]</span><span class="team-line team-a">Winner QF1</span><span class="team-line team-b">Winner QF4</span></td><td class="score-cell"></td></tr>
+        <tr class="light-bg" data-id="SF2" data-type="sets"><td><span class="tag tag-ko">SF (3x15)</span><span class="court-badge">Ct 5</span></td><td class="time-cell">10:35 PM</td><td class="teams-cell"><span class="match-tag">[SF2]</span><span class="team-line team-a">Winner QF2</span><span class="team-line team-b">Winner QF3</span></td><td class="score-cell"></td></tr>
+        <tr data-id="FIN" data-type="sets"><td><span class="tag tag-ko">FIN (3x15)</span><span class="court-badge">Ct 4</span></td><td class="time-cell">11:00 PM</td><td class="teams-cell"><span class="match-tag">[FIN]</span><span class="team-line team-a">Winner SF1</span><span class="team-line team-b">Winner SF2</span></td><td class="score-cell"></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+  <script>
+    // FIREBASE CONFIGURATION
+    const firebaseConfig = {
+  apiKey: "AIzaSyBfOyfDGKxyusEqRJtBOyFcS0egmUcHD8Y",
+  authDomain: "ebc-badminton.firebaseapp.com",
+  databaseURL: "https://ebc-badminton-default-rtdb.firebaseio.com",
+  projectId: "ebc-badminton",
+  storageBucket: "ebc-badminton.firebasestorage.app",
+  messagingSenderId: "884432498108",
+  appId: "1:884432498108:web:72d994b68c5017c9fa0fb9",
+  measurementId: "G-8MM5TY22SW"
+};
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Admin Mode Detection
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAdmin = urlParams.get('admin') === 'admin123';
+
+    const modeIndicator = document.getElementById('mode-indicator');
+    const adminBar = document.getElementById('admin-bar');
+
+    if (isAdmin) {
+      modeIndicator.innerText = "Admin Scoring Mode";
+      modeIndicator.className = "status-pill status-admin";
+      adminBar.style.display = "block";
+    }
+
+    // Dynamic UI construction
+    const allMatches = document.querySelectorAll('.match-table tbody tr');
+    allMatches.forEach((row) => {
+      const matchId = row.getAttribute('data-id');
+      const isSets = row.getAttribute('data-type') === 'sets';
+      const cell = row.querySelector('.score-cell');
+
+      if (isAdmin) {
+        if (!isSets) {
+          cell.innerHTML = `
+            <div class="score-input-container">
+              <input type="number" id="input-a-${matchId}" class="score-input" min="0"/>- 
+              <input type="number" id="input-b-${matchId}" class="score-input" min="0"/>
+              <button class="btn-save" onclick="saveScore('${matchId}', false)">OK</button>
+            </div>`;
+        } else {
+          cell.innerHTML = `
+            <div class="score-input-container">
+              <div class="set-box">S1:<input type="number" id="s1a-${matchId}" class="score-input"/>-<input type="number" id="s1b-${matchId}" class="score-input"/></div>
+              <div class="set-box">S2:<input type="number" id="s2a-${matchId}" class="score-input"/>-<input type="number" id="s2b-${matchId}" class="score-input"/></div>
+              <div class="set-box">S3:<input type="number" id="s3a-${matchId}" class="score-input"/>-<input type="number" id="s3b-${matchId}" class="score-input"/></div>
+              <button class="btn-save" onclick="saveScore('${matchId}', true)">OK</button>
+            </div>`;
+        }
+      } else {
+        cell.innerHTML = `<span class="score-display-read" id="score-text-${matchId}">-</span>`;
+      }
+    });
+
+    function saveScore(matchId, isSets) {
+      if (!isSets) {
+        const valA = document.getElementById(`input-a-${matchId}`).value;
+        const valB = document.getElementById(`input-b-${matchId}`).value;
+        db.ref('scores/' + matchId).set({ scoreA: valA, scoreB: valB });
+      } else {
+        const s1a = document.getElementById(`s1a-${matchId}`).value;
+        const s1b = document.getElementById(`s1b-${matchId}`).value;
+        const s2a = document.getElementById(`s2a-${matchId}`).value;
+        const s2b = document.getElementById(`s2b-${matchId}`).value;
+        const s3a = document.getElementById(`s3a-${matchId}`).value;
+        const s3b = document.getElementById(`s3b-${matchId}`).value;
+        db.ref('scores/' + matchId).set({ s1a, s1b, s2a, s2b, s3a, s3b });
+      }
+    }
+
+    function clearAllScores() {
+      if (confirm("Are you sure you want to clear ALL tournament scores across group and knockout stages?")) {
+        db.ref('scores').remove();
+      }
+    }
+
+    // Realtime Database Event Syncing
+    db.ref('scores').on('value', (snapshot) => {
+      const data = snapshot.val() || {};
+      
+      const groupMatches = document.querySelectorAll('#group-schedule tbody tr');
+      groupMatches.forEach(row => processMatchRow(row, data));
+
+      const qualified = calculateStandingsAndQualifiers();
+      updateQFTeams(qualified);
+
+      const qfMatches = document.querySelectorAll('#knockout-schedule tbody tr[data-id^="QF"]');
+      const qfWinners = {};
+      qfMatches.forEach(row => {
+        const mId = row.getAttribute('data-id');
+        qfWinners[mId] = processMatchRow(row, data);
+      });
+
+      updateSFTeams(qfWinners);
+
+      const sfMatches = document.querySelectorAll('#knockout-schedule tbody tr[data-id^="SF"]');
+      const sfWinners = {};
+      sfMatches.forEach(row => {
+        const mId = row.getAttribute('data-id');
+        sfWinners[mId] = processMatchRow(row, data);
+      });
+
+      updateFinalTeams(sfWinners);
+
+      const finalMatch = document.querySelector('#knockout-schedule tbody tr[data-id="FIN"]');
+      if (finalMatch) {
+        processMatchRow(finalMatch, data);
+      }
+    });
+
+    function processMatchRow(row, data) {
+      const matchId = row.getAttribute('data-id');
+      const isSets = row.getAttribute('data-type') === 'sets';
+      const mData = data[matchId] || {};
+      
+      const teamACell = row.querySelector('.team-a');
+      const teamBCell = row.querySelector('.team-b');
+
+      teamACell.classList.remove('winner-highlight');
+      teamBCell.classList.remove('winner-highlight');
+
+      let winner = null;
+
+      if (!isSets) {
+        const scoreA = mData.scoreA !== undefined && mData.scoreA !== '' ? parseInt(mData.scoreA, 10) : null;
+        const scoreB = mData.scoreB !== undefined && mData.scoreB !== '' ? parseInt(mData.scoreB, 10) : null;
+
+        if (isAdmin) {
+          document.getElementById(`input-a-${matchId}`).value = mData.scoreA || '';
+          document.getElementById(`input-b-${matchId}`).value = mData.scoreB || '';
+        } else {
+          const txt = document.getElementById(`score-text-${matchId}`);
+          txt.innerText = (scoreA !== null && scoreB !== null) ? `${scoreA} - ${scoreB}` : '-';
+        }
+
+        row.setAttribute('data-val-a', mData.scoreA || '');
+        row.setAttribute('data-val-b', mData.scoreB || '');
+
+        if (scoreA !== null && scoreB !== null && !isNaN(scoreA) && !isNaN(scoreB)) {
+          if (scoreA > scoreB) {
+            teamACell.classList.add('winner-highlight');
+            winner = teamACell.innerText.trim();
+          } else if (scoreB > scoreA) {
+            teamBCell.classList.add('winner-highlight');
+            winner = teamBCell.innerText.trim();
+          }
+        }
+      } else {
+        const s1a = parseScore(mData.s1a); const s1b = parseScore(mData.s1b);
+        const s2a = parseScore(mData.s2a); const s2b = parseScore(mData.s2b);
+        const s3a = parseScore(mData.s3a); const s3b = parseScore(mData.s3b);
+
+        if (isAdmin) {
+          document.getElementById(`s1a-${matchId}`).value = mData.s1a || '';
+          document.getElementById(`s1b-${matchId}`).value = mData.s1b || '';
+          document.getElementById(`s2a-${matchId}`).value = mData.s2a || '';
+          document.getElementById(`s2b-${matchId}`).value = mData.s2b || '';
+          document.getElementById(`s3a-${matchId}`).value = mData.s3a || '';
+          document.getElementById(`s3b-${matchId}`).value = mData.s3b || '';
+        } else {
+          const txt = document.getElementById(`score-text-${matchId}`);
+          let strArr = [];
+          if (s1a !== null && s1b !== null) strArr.push(`${s1a}-${s1b}`);
+          if (s2a !== null && s2b !== null) strArr.push(`${s2a}-${s2b}`);
+          if (s3a !== null && s3b !== null) strArr.push(`${s3a}-${s3b}`);
+          txt.innerText = strArr.length > 0 ? strArr.join(', ') : '-';
+        }
+
+        let setsWonA = 0, setsWonB = 0;
+        if (s1a !== null && s1b !== null) { if (s1a > s1b) setsWonA++; else if (s1b > s1a) setsWonB++; }
+        if (s2a !== null && s2b !== null) { if (s2a > s2b) setsWonA++; else if (s2b > s2a) setsWonB++; }
+        if (s3a !== null && s3b !== null) { if (s3a > s3b) setsWonA++; else if (s3b > s3a) setsWonB++; }
+
+        if (setsWonA >= 2) {
+          teamACell.classList.add('winner-highlight');
+          winner = teamACell.innerText.trim();
+        } else if (setsWonB >= 2) {
+          teamBCell.classList.add('winner-highlight');
+          winner = teamBCell.innerText.trim();
+        }
+      }
+
+      return winner;
+    }
+
+    function parseScore(val) {
+      return (val !== undefined && val !== '' && val !== null) ? parseInt(val, 10) : null;
+    }
+
+    function calculateStandingsAndQualifiers() {
+      const groups = ['a', 'b', 'c', 'd'];
+      const qualified = {};
+
+      groups.forEach(groupLetter => {
+        const table = document.getElementById(`table-group-${groupLetter}`);
+        const groupRows = Array.from(table.querySelectorAll('tbody tr'));
+        
+        const stats = {};
+        groupRows.forEach(row => {
+          const teamName = row.getAttribute('data-team');
+          stats[teamName] = { element: row, name: teamName, p: 0, w: 0, l: 0, pf: 0, pa: 0, pts: 0 };
+        });
+
+        const matchRows = document.querySelectorAll(`#group-schedule tbody tr[data-group="${groupLetter.toUpperCase()}"]`);
+        
+        matchRows.forEach(match => {
+          const teamA = match.querySelector('.team-a').innerText.trim();
+          const teamB = match.querySelector('.team-b').innerText.trim();
+          const valA = match.getAttribute('data-val-a');
+          const valB = match.getAttribute('data-val-b');
+
+          if (valA !== '' && valB !== '' && valA !== null && valB !== null) {
+            const scoreA = parseInt(valA, 10);
+            const scoreB = parseInt(valB, 10);
+
+            if (!isNaN(scoreA) && !isNaN(scoreB)) {
+              if (stats[teamA]) {
+                stats[teamA].p += 1; stats[teamA].pf += scoreA; stats[teamA].pa += scoreB;
+                if (scoreA > scoreB) { stats[teamA].w += 1; stats[teamA].pts += 2; }
+                else if (scoreA < scoreB) { stats[teamA].l += 1; }
+              }
+              if (stats[teamB]) {
+                stats[teamB].p += 1; stats[teamB].pf += scoreB; stats[teamB].pa += scoreA;
+                if (scoreB > scoreA) { stats[teamB].w += 1; stats[teamB].pts += 2; }
+                else if (scoreB < scoreA) { stats[teamB].l += 1; }
+              }
+            }
+          }
+        });
+
+        const teamArray = Object.values(stats);
+        teamArray.sort((a, b) => {
+          if (b.pts !== a.pts) return b.pts - a.pts;
+          const diffA = a.pf - a.pa;
+          const diffB = b.pf - b.pa;
+          if (diffB !== diffA) return diffB - diffA;
+          return b.pf - a.pf;
+        });
+
+        const tbody = table.querySelector('tbody');
+        tbody.innerHTML = '';
+
+        teamArray.forEach((teamData, index) => {
+          const row = teamData.element;
+          row.querySelector('.p').innerText = teamData.p;
+          row.querySelector('.w').innerText = teamData.w;
+          row.querySelector('.l').innerText = teamData.l;
+          row.querySelector('.pf').innerText = teamData.pf;
+          row.querySelector('.pa').innerText = teamData.pa;
+          row.querySelector('.pts').innerText = teamData.pts;
+          if (index % 2 === 1) { row.classList.add('light-bg'); } else { row.classList.remove('light-bg'); }
+          tbody.appendChild(row);
+        });
+
+        const gUpper = groupLetter.toUpperCase();
+        qualified[`${gUpper}1`] = teamArray[0].p > 0 ? teamArray[0].name : `${gUpper}1`;
+        qualified[`${gUpper}2`] = teamArray[1].p > 0 ? teamArray[1].name : `${gUpper}2`;
+      });
+
+      return qualified;
+    }
+
+    function updateQFTeams(q) {
+      setTeamText('QF1', '.team-a', q['A1']); setTeamText('QF1', '.team-b', q['D2']);
+      setTeamText('QF2', '.team-a', q['B1']); setTeamText('QF2', '.team-b', q['C2']);
+      setTeamText('QF3', '.team-a', q['A2']); setTeamText('QF3', '.team-b', q['C1']);
+      setTeamText('QF4', '.team-a', q['B2']); setTeamText('QF4', '.team-b', q['D1']);
+    }
+
+    function updateSFTeams(qfWinners) {
+      setTeamText('SF1', '.team-a', qfWinners['QF1'] || 'Winner QF1');
+      setTeamText('SF1', '.team-b', qfWinners['QF4'] || 'Winner QF4');
+      setTeamText('SF2', '.team-a', qfWinners['QF2'] || 'Winner QF2');
+      setTeamText('SF2', '.team-b', qfWinners['QF3'] || 'Winner QF3');
+    }
+
+    function updateFinalTeams(sfWinners) {
+      setTeamText('FIN', '.team-a', sfWinners['SF1'] || 'Winner SF1');
+      setTeamText('FIN', '.team-b', sfWinners['SF2'] || 'Winner SF2');
+    }
+
+    function setTeamText(matchId, selector, text) {
+      const row = document.querySelector(`#knockout-schedule tbody tr[data-id="${matchId}"]`);
+      if (row) {
+        const cell = row.querySelector(selector);
+        if (cell) cell.innerText = text;
+      }
+    }
+  </script>
+</body>
+</html>
