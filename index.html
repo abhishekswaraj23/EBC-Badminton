@@ -796,7 +796,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
-      isAdmin = urlParams.get('admin') === 'admin123';
+      isAdmin = urlParams.get('admin') === 'ebcadmin123';
 
       if (isAdmin) {
         document.getElementById('admin-indicator').style.display = "inline-block";
@@ -980,7 +980,7 @@
       .then(() => {
         alert(`Tournament "${tourneyName}" deleted successfully.`);
         currentTournamentId = "";
-        window.location.href = window.location.pathname + "?admin=admin123";
+        window.location.href = window.location.pathname + "?admin=ebcadmin123";
       })
       .catch((err) => alert("Failed to delete tournament: " + err.message));
     }
