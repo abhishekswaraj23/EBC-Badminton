@@ -25,6 +25,13 @@
       --warning: #F59E0B;
       --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
       --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+
+      /* Group Dynamic Colors */
+      --grp-a: #3B82F6;
+      --grp-b: #8B5CF6;
+      --grp-c: #EC4899;
+      --grp-d: #F59E0B;
+      --grp-ko: #D97706;
     }
 
     * { box-sizing: border-box; }
@@ -114,6 +121,7 @@
       white-space: nowrap;
     }
     .status-admin { background-color: #FEE2E2; color: #991B1B; }
+    .status-scorer { background-color: #FEF3C7; color: #92400E; }
     .status-viewer { background-color: #E0F2FE; color: #0369A1; }
     .status-live { background-color: #10B981; color: white; }
     .status-upcoming { background-color: #F59E0B; color: white; }
@@ -156,6 +164,7 @@
     }
 
     .admin-only-element { display: none !important; }
+    .scorer-or-admin-element { display: none !important; }
 
     .admin-grid {
       display: grid;
@@ -198,6 +207,20 @@
       background: white;
       outline: none;
     }
+
+    .champion-banner {
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #78350F;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      display: none;
+      animation: pulse 2s infinite;
+    }
+    .champion-banner h2 { margin: 0; font-size: 1.4rem; font-weight: 800; }
+    .champion-banner p { margin: 0.2rem 0 0 0; font-weight: 700; font-size: 1.1rem; }
 
     .event-banner {
       background: var(--surface);
@@ -254,15 +277,23 @@
       border-radius: 0.5rem;
       overflow: hidden;
       box-shadow: var(--shadow-sm);
+      margin-bottom: 0.75rem;
     }
 
     .card-header {
-      padding: 0.4rem 0.6rem;
+      padding: 0.45rem 0.6rem;
       background: var(--primary);
       color: white;
       font-weight: 700;
       font-size: 0.8rem;
     }
+
+    /* Dynamic Group Headers */
+    .card-header.grp-A { background: var(--grp-a); }
+    .card-header.grp-B { background: var(--grp-b); }
+    .card-header.grp-C { background: var(--grp-c); }
+    .card-header.grp-D { background: var(--grp-d); }
+    .card-header.grp-KO { background: var(--grp-ko); }
 
     table {
       width: 100%;
@@ -298,6 +329,7 @@
       justify-content: space-between;
       box-shadow: var(--shadow-sm);
       gap: 0.4rem;
+      position: relative;
     }
 
     .match-card.is-live {
@@ -319,15 +351,34 @@
     }
 
     .tag {
-      padding: 0.12rem 0.3rem;
+      padding: 0.12rem 0.35rem;
       border-radius: 0.2rem;
       font-size: 0.65rem;
       font-weight: 700;
       width: fit-content;
+      color: white;
     }
 
-    .tag-grp { background: #DBEAFE; color: #1E40AF; }
-    .tag-ko { background: #FEF3C7; color: #B45309; }
+    /* Dynamic Group Badges */
+    .tag-grp-a { background: var(--grp-a); }
+    .tag-grp-b { background: var(--grp-b); }
+    .tag-grp-c { background: var(--grp-c); }
+    .tag-grp-d { background: var(--grp-d); }
+    .tag-ko { background: var(--grp-ko); }
+
+    /* Court Badges Dynamic Colors */
+    .court-badge {
+      display: inline-block;
+      padding: 0.1rem 0.35rem;
+      border-radius: 0.2rem;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+    .court-1 { background: #E0F2FE; color: #0369A1; }
+    .court-2 { background: #FEE2E2; color: #991B1B; }
+    .court-3 { background: #FEF3C7; color: #92400E; }
+    .court-4 { background: #F3E8FF; color: #6B21A8; }
+    .court-default { background: #E2E8F0; color: #334155; }
 
     .match-teams {
       flex-grow: 1;
@@ -366,15 +417,6 @@
     .sub-tab-btn.active {
       color: var(--primary);
       border-bottom-color: var(--primary);
-    }
-
-    .court-badge {
-      display: inline-block;
-      padding: 0.1rem 0.3rem;
-      background: #E2E8F0;
-      border-radius: 0.2rem;
-      font-size: 0.65rem;
-      font-weight: 600;
     }
 
     .col-title {
@@ -564,17 +606,24 @@
       </div>
     </div>
     <div class="nav-actions">
-      <span id="live-indicator" class="status-pill status-viewer">VIEWER MODE</span>
-      <span id="admin-indicator" class="status-pill status-admin" style="display:none;">ADMIN MODE</span>
+      <span id="role-indicator" class="status-pill status-viewer">VIEWER MODE</span>
+      <span id="live-indicator" class="status-pill status-upcoming">UPCOMING</span>
     </div>
   </nav>
 
   <div class="container">
 
-    <div class="main-tabs">
+    <!-- MAIN TABS (Hidden in Spectator Mode) -->
+    <div class="main-tabs" id="main-tabs-header">
       <button class="main-tab-btn active" id="tab-viewer-btn" onclick="showMainTab('viewer-view', this)">📊 Spectator Dashboard</button>
-      <button class="main-tab-btn admin-only-element" id="tab-scoring-btn" onclick="showMainTab('scoring-view', this)">⚡ Real-Time Scoring</button>
+      <button class="main-tab-btn scorer-or-admin-element" id="tab-scoring-btn" onclick="showMainTab('scoring-view', this)">⚡ Real-Time Scoring</button>
       <button class="main-tab-btn admin-only-element" id="tab-manage-btn" onclick="showMainTab('manage-view', this)">⚙️ Setup & Teams</button>
+    </div>
+
+    <!-- TOURNAMENT WINNER DISPLAY -->
+    <div id="top-champion-banner" class="champion-banner">
+      <h2>🏆 TOURNAMENT CHAMPION</h2>
+      <p id="top-champion-name">Team Name</p>
     </div>
 
     <div class="event-banner">
@@ -594,17 +643,18 @@
     <div id="viewer-view" class="tab-view active">
       <div class="sub-tabs">
         <button class="sub-tab-btn active" onclick="showSubTab('v-schedule', this)">🎾 Tournament Schedule</button>
-        <button class="sub-tab-btn" onclick="showSubTab('v-standings', this)">📊 Groups & Standings</button>
+        <button class="sub-tab-btn" onclick="showSubTab('v-standings', this)">📊 Groups & Knockout Tree</button>
       </div>
 
       <!-- UNIFIED SCHEDULE TAB -->
       <div id="v-schedule" class="sub-tab-view">
         <div style="margin-bottom:0.75rem; display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; justify-content:space-between; background:white; padding:0.5rem 0.75rem; border-radius:0.5rem; border:1px solid var(--border);">
-          <div style="display:flex; gap:0.4rem; align-items:center;">
+          <div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap;">
             <strong style="font-size:0.75rem; color:var(--text-muted);">Stage:</strong>
-            <button class="btn btn-outline btn-sm active" id="btn-filter-all" onclick="setStageFilter('ALL', this)">All Matches</button>
+            <button class="btn btn-outline btn-sm active" id="btn-filter-all" onclick="setStageFilter('ALL', this)">All</button>
             <button class="btn btn-outline btn-sm" id="btn-filter-grp" onclick="setStageFilter('GRP', this)">Group Stage</button>
             <button class="btn btn-outline btn-sm" id="btn-filter-ko" onclick="setStageFilter('KO', this)">Knockouts</button>
+            <button class="btn btn-outline btn-sm" id="btn-filter-comp" onclick="setStageFilter('COMPLETED', this)">✅ Completed Matches</button>
           </div>
           <div style="display:flex; gap:0.4rem; align-items:center;">
             <strong style="font-size:0.75rem; color:var(--text-muted);">Court:</strong>
@@ -628,20 +678,23 @@
         </div>
       </div>
 
-      <!-- STANDINGS ONLY -->
+      <!-- STANDINGS & KNOCKOUT TAB -->
       <div id="v-standings" class="sub-tab-view" style="display:none;">
         <div id="groups-container" class="grid-2x2"></div>
+        <div class="col-title" style="margin-top:1.2rem; font-size:1rem; border-bottom:2px solid var(--border); padding-bottom:0.4rem;">🥇 KNOCKOUT STAGE STANDINGS & RESULTS</div>
+        <div id="knockout-tree-container" class="grid-2x2" style="margin-top:0.75rem;"></div>
       </div>
     </div>
 
-    <!-- VIEW 2: HIGH-VISIBILITY SCORING PANEL -->
+    <!-- VIEW 2: SCORING PANEL (Accessible by Scorer & Admin) -->
     <div id="scoring-view" class="tab-view">
       <div style="background: white; border: 1px solid var(--border); border-radius:0.5rem; padding:0.75rem; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
         <div>
           <h3 style="margin:0 0 0.15rem 0; color:var(--primary); font-size:0.95rem;">⚡ Real-Time Court Scoring Control</h3>
-          <p style="font-size:0.75rem; color:var(--text-muted); margin:0;">Toggle match status to <strong>🔴 IN PROGRESS</strong> to score matches. Completed matches shift to the bottom section.</p>
+          <p style="font-size:0.75rem; color:var(--text-muted); margin:0;">Score matches dynamically. Auto-mapping available once group stage concludes.</p>
         </div>
-        <div style="display:flex; gap:0.4rem; align-items:center;">
+        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+          <button class="btn btn-warning btn-sm scorer-or-admin-element" onclick="finalizeGroupStageAndMapQF()">⚡ Finalize Group Stage & Auto-Advance QF</button>
           <strong style="font-size:0.75rem; color:var(--text-muted);">Filter Court:</strong>
           <select id="scoring-court-filter" class="tournament-select" style="padding:0.25rem 0.4rem;" onchange="renderScoringPanel()"></select>
         </div>
@@ -656,7 +709,7 @@
       <div id="completed-scoring-container" class="grid-2x2"></div>
     </div>
 
-    <!-- VIEW 3: SETUP & MANAGEMENT -->
+    <!-- VIEW 3: SETUP & MANAGEMENT (Admin Only) -->
     <div id="manage-view" class="tab-view">
       <div class="admin-grid">
         
@@ -688,7 +741,7 @@
           </div>
           <div class="form-group">
             <label>Courts (Comma Separated)</label>
-            <input type="text" id="t-courts" class="form-control" value="Court 1, Court 2">
+            <input type="text" id="t-courts" class="form-control" value="Court 1, Court 2, Court 3, Court 4">
           </div>
           <div class="form-group">
             <label>Group Stage Format</label>
@@ -743,7 +796,8 @@
             <label>Start Time</label>
             <input type="text" id="gen-time" class="form-control" value="09:00 AM">
           </div>
-          <button class="btn btn-accent" style="width:100%; margin-bottom:0.5rem;" onclick="autoGenerateFixtures()">⚡ Auto-Generate Properly Shuffled Fixtures</button>
+          <button class="btn btn-accent" style="width:100%; margin-bottom:0.5rem;" onclick="autoGenerateFixtures()">⚡ Auto-Generate Fixtures</button>
+          <button class="btn btn-warning btn-sm" style="width:100%; margin-bottom:0.5rem;" onclick="finalizeGroupStageAndMapQF()">⚡ Finalize Group Stage & Auto-Advance QF</button>
           <button class="btn btn-danger btn-sm" style="width:100%; margin-bottom:0.4rem;" onclick="clearFixtures()">Clear Fixtures</button>
           <button class="btn btn-warning btn-sm" style="width:100%; margin-bottom:0.8rem;" onclick="resetCurrentScores()">Reset Scores</button>
           
@@ -783,32 +837,28 @@
     const auth = firebase.auth();
 
     let currentTournamentId = "";
-    let isAdmin = false;
+    let userRole = "viewer"; // viewer, scorer, admin
     let localData = { tournaments: {}, teams: {}, fixtures: {}, scores: {} };
     let activeStageFilter = 'ALL';
 
-    const STAGE_PRIORITY = {
-      'GRP': 1,
-      'QF': 2,
-      'SF': 3,
-      'FINAL': 4
-    };
+    const STAGE_PRIORITY = { 'GRP': 1, 'QF': 2, 'SF': 3, 'FINAL': 4 };
 
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
-      isAdmin = urlParams.get('admin') === 'ebcadmin123';
+      const adminParam = urlParams.get('admin');
+      const roleParam = urlParams.get('role');
 
-      if (isAdmin) {
-        document.getElementById('admin-indicator').style.display = "inline-block";
-        document.querySelectorAll('.admin-only-element').forEach(el => {
-          el.style.setProperty('display', 'inline-flex', 'important');
-        });
-        auth.signInAnonymously().catch(err => console.error("Firebase Anonymous Auth Error:", err));
+      if (adminParam === 'ebcadmin@123') {
+        userRole = 'admin';
+      } else if (roleParam === 'ebcscorer123' || adminParam === 'ebcscorer123') {
+        userRole = 'scorer';
       } else {
-        document.querySelectorAll('.admin-only-element').forEach(el => {
-          el.style.setProperty('display', 'none', 'important');
-        });
+        userRole = 'viewer';
       }
+
+      applyRoleUI();
+
+      auth.signInAnonymously().catch(err => console.error("Firebase Anonymous Auth Error:", err));
 
       db.ref().on('value', (snapshot) => {
         const val = snapshot.val() || {};
@@ -831,9 +881,38 @@
       });
     });
 
-    function verifyAdminPermission() {
-      if (!isAdmin) {
-        alert("Access Denied: Admin authorization required.");
+    function applyRoleUI() {
+      const roleInd = document.getElementById('role-indicator');
+      const mainTabsHeader = document.getElementById('main-tabs-header');
+
+      if (userRole === 'admin') {
+        roleInd.className = "status-pill status-admin";
+        roleInd.innerText = "ADMIN MODE";
+        mainTabsHeader.style.display = "flex";
+        document.querySelectorAll('.admin-only-element').forEach(el => el.style.setProperty('display', 'inline-flex', 'important'));
+        document.querySelectorAll('.scorer-or-admin-element').forEach(el => el.style.setProperty('display', 'inline-flex', 'important'));
+      } else if (userRole === 'scorer') {
+        roleInd.className = "status-pill status-scorer";
+        roleInd.innerText = "SCORER MODE";
+        mainTabsHeader.style.display = "flex";
+        document.querySelectorAll('.admin-only-element').forEach(el => el.style.setProperty('display', 'none', 'important'));
+        document.querySelectorAll('.scorer-or-admin-element').forEach(el => el.style.setProperty('display', 'inline-flex', 'important'));
+      } else {
+        roleInd.className = "status-pill status-viewer";
+        roleInd.innerText = "VIEWER MODE";
+        mainTabsHeader.style.display = "none"; // Hide Spectator Dashboard Header text in viewer mode
+        document.querySelectorAll('.admin-only-element').forEach(el => el.style.setProperty('display', 'none', 'important'));
+        document.querySelectorAll('.scorer-or-admin-element').forEach(el => el.style.setProperty('display', 'none', 'important'));
+      }
+    }
+
+    function verifyPermission(requiredRole = 'scorer') {
+      if (requiredRole === 'admin' && userRole !== 'admin') {
+        alert("Access Denied: Admin privileges required.");
+        return false;
+      }
+      if (requiredRole === 'scorer' && userRole !== 'admin' && userRole !== 'scorer') {
+        alert("Access Denied: Scorer or Admin privileges required.");
         return false;
       }
       return true;
@@ -845,17 +924,11 @@
           "ebc_championship_2026": {
             name: "EBC Badminton Premier League 2026",
             venue: "Wakud Sports Complex",
-            courts: "Court 1, Court 2",
+            courts: "Court 1, Court 2, Court 3, Court 4",
             rulesGroup: "1 Set (21 Pts)",
             rulesQF: "1 Set (21 Pts)",
             rulesKO: "Best of 3 (21 Pts)",
             status: "LIVE"
-          }
-        },
-        teams: {
-          "ebc_championship_2026": {
-            "t1": { name: "Smashers", players: "Alex & Bob", group: "A" },
-            "t2": { name: "Shuttlers", players: "Carl & Dan", group: "A" }
           }
         }
       };
@@ -863,7 +936,8 @@
     }
 
     function showMainTab(viewId, btn) {
-      if ((viewId === 'scoring-view' || viewId === 'manage-view') && !verifyAdminPermission()) return;
+      if (viewId === 'manage-view' && !verifyPermission('admin')) return;
+      if (viewId === 'scoring-view' && !verifyPermission('scorer')) return;
 
       document.querySelectorAll('.tab-view').forEach(e => e.classList.remove('active'));
       document.querySelectorAll('.main-tab-btn').forEach(e => e.classList.remove('active'));
@@ -881,8 +955,9 @@
 
     function setStageFilter(filterType, btn) {
       activeStageFilter = filterType;
-      ['btn-filter-all', 'btn-filter-grp', 'btn-filter-ko'].forEach(id => {
-        document.getElementById(id).classList.remove('active');
+      ['btn-filter-all', 'btn-filter-grp', 'btn-filter-ko', 'btn-filter-comp'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
       });
       btn.classList.add('active');
       renderInteractiveMatches();
@@ -908,7 +983,7 @@
     }
 
     function editSelectedTournament() {
-      if (!verifyAdminPermission()) return;
+      if (!verifyPermission('admin')) return;
       populateFormFromActive();
       showMainTab('manage-view', document.getElementById('tab-manage-btn'));
     }
@@ -926,7 +1001,7 @@
     }
 
     function saveTournamentConfig() {
-      if (!verifyAdminPermission()) return;
+      if (!verifyPermission('admin')) return;
 
       const rawId = document.getElementById('t-id').value.trim();
       const name = document.getElementById('t-title').value.trim();
@@ -964,7 +1039,7 @@
     }
 
     function deleteActiveTournament() {
-      if (!verifyAdminPermission()) return;
+      if (!verifyPermission('admin')) return;
       if (!currentTournamentId) return alert("No active tournament selected to delete.");
 
       const tourneyName = ((localData.tournaments || {})[currentTournamentId] || {}).name || currentTournamentId;
@@ -980,7 +1055,7 @@
       .then(() => {
         alert(`Tournament "${tourneyName}" deleted successfully.`);
         currentTournamentId = "";
-        window.location.href = window.location.pathname + "?admin=ebcadmin123";
+        window.location.reload();
       })
       .catch((err) => alert("Failed to delete tournament: " + err.message));
     }
@@ -1009,7 +1084,7 @@
       }
 
       const actionContainer = document.getElementById('status-action-container');
-      if (isAdmin) {
+      if (userRole === 'admin') {
         actionContainer.innerHTML = `
           <select class="form-control" style="font-size:0.75rem; padding:0.25rem 0.4rem; font-weight:700;" onchange="setTournamentState(this.value)">
             <option value="UPCOMING" ${tourneyStatus === 'UPCOMING' ? 'selected' : ''}>⏳ Mark Upcoming</option>
@@ -1033,14 +1108,49 @@
         scoringCourtSelect.innerHTML += `<option value="${c}">${c}</option>`; 
       });
 
+      checkTournamentChampion();
       renderStandingsAndGroups();
       renderInteractiveMatches();
-      if (isAdmin) renderScoringPanel();
+      if (userRole === 'admin' || userRole === 'scorer') renderScoringPanel();
     }
 
     function setTournamentState(status) {
-      if (!verifyAdminPermission()) return;
+      if (!verifyPermission('admin')) return;
       db.ref(`tournaments/${currentTournamentId}/status`).set(status);
+    }
+
+    function checkTournamentChampion() {
+      const scoresObj = (localData.scores || {})[currentTournamentId] || {};
+      const fixturesObj = (localData.fixtures || {})[currentTournamentId] || {};
+      const finalFixture = fixturesObj['FINAL'];
+      const finalScore = scoresObj['FINAL'];
+
+      const topBanner = document.getElementById('top-champion-banner');
+      const championNameEl = document.getElementById('top-champion-name');
+
+      if (finalFixture && finalScore && finalScore.status === 'COMPLETED') {
+        let winner = null;
+        if (finalFixture.type === 'single') {
+          const scA = parseInt(finalScore.scoreA || 0, 10);
+          const scB = parseInt(finalScore.scoreB || 0, 10);
+          if (scA > scB) winner = finalFixture.teamA;
+          else if (scB > scA) winner = finalFixture.teamB;
+        } else {
+          let setsA = 0, setsB = 0;
+          if (parseInt(finalScore.s1a||0) > parseInt(finalScore.s1b||0)) setsA++; else if (parseInt(finalScore.s1b||0) > parseInt(finalScore.s1a||0)) setsB++;
+          if (parseInt(finalScore.s2a||0) > parseInt(finalScore.s2b||0)) setsA++; else if (parseInt(finalScore.s2b||0) > parseInt(finalScore.s2a||0)) setsB++;
+          if (parseInt(finalScore.s3a||0) > parseInt(finalScore.s3b||0)) setsA++; else if (parseInt(finalScore.s3a||0) < parseInt(finalScore.s3b||0)) setsB++;
+          if (setsA > setsB) winner = finalFixture.teamA;
+          else if (setsB > setsA) winner = finalFixture.teamB;
+        }
+
+        if (winner && !winner.includes('Winner')) {
+          topBanner.style.display = 'block';
+          championNameEl.innerText = winner;
+          return;
+        }
+      }
+      topBanner.style.display = 'none';
     }
 
     function getStageCategory(stageStr) {
@@ -1060,24 +1170,37 @@
         const priorityA = STAGE_PRIORITY[catA] || 99;
         const priorityB = STAGE_PRIORITY[catB] || 99;
 
-        if (priorityA !== priorityB) {
-          return priorityA - priorityB;
-        }
+        if (priorityA !== priorityB) return priorityA - priorityB;
 
         const timeA = a.scheduledTimestamp || 0;
         const timeB = b.scheduledTimestamp || 0;
-        if (timeA !== timeB) {
-          return timeA - timeB;
-        }
+        if (timeA !== timeB) return timeA - timeB;
 
         return (a.matchOrder || 0) - (b.matchOrder || 0);
       });
     }
 
-    function renderStandingsAndGroups() {
-      const container = document.getElementById('groups-container');
-      container.innerHTML = '';
+    function getCourtBadgeClass(courtName) {
+      if (!courtName) return 'court-default';
+      const c = courtName.toLowerCase();
+      if (c.includes('1')) return 'court-1';
+      if (c.includes('2')) return 'court-2';
+      if (c.includes('3')) return 'court-3';
+      if (c.includes('4')) return 'court-4';
+      return 'court-default';
+    }
 
+    function getGroupBadgeClass(groupStr) {
+      if (!groupStr) return 'tag-grp-a';
+      const g = groupStr.toUpperCase();
+      if (g === 'A' || g.includes('GRP A')) return 'tag-grp-a';
+      if (g === 'B' || g.includes('GRP B')) return 'tag-grp-b';
+      if (g === 'C' || g.includes('GRP C')) return 'tag-grp-c';
+      if (g === 'D' || g.includes('GRP D')) return 'tag-grp-d';
+      return 'tag-ko';
+    }
+
+    function calculateGroupStandings() {
       const teamsObj = (localData.teams || {})[currentTournamentId] || {};
       const fixturesObj = (localData.fixtures || {})[currentTournamentId] || {};
       const scoresObj = (localData.scores || {})[currentTournamentId] || {};
@@ -1112,37 +1235,114 @@
         }
       });
 
+      Object.keys(groups).forEach(gKey => {
+        groups[gKey].sort((a, b) => b.pts - a.pts || (b.pf - b.pa) - (a.pf - a.pa) || b.pf - a.pf);
+      });
+
+      return groups;
+    }
+
+    function renderStandingsAndGroups() {
+      const container = document.getElementById('groups-container');
+      const koContainer = document.getElementById('knockout-tree-container');
+      container.innerHTML = '';
+      koContainer.innerHTML = '';
+
+      const groups = calculateGroupStandings();
       const sortedGroupKeys = Object.keys(groups).sort();
+
       if (sortedGroupKeys.length === 0) {
         container.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted);">No groups available.</div>';
+      } else {
+        sortedGroupKeys.forEach(gKey => {
+          const groupTeams = groups[gKey];
+          let rowsHtml = groupTeams.map((t, idx) => `
+            <tr>
+              <td class="team-cell">#${idx+1} ${t.name}<span class="players-sub">${t.players}</span></td>
+              <td>${t.p}</td><td>${t.w}</td><td>${t.l}</td><td>${t.pf}</td><td>${t.pa}</td><td><strong>${t.pts}</strong></td>
+            </tr>
+          `).join('');
+
+          const headerClass = `grp-${gKey.toUpperCase()}`;
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <div class="card-header ${headerClass}">Group ${gKey} Standings</div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Team</th><th>P</th><th>W</th><th>L</th><th>+</th><th>-</th><th>Pts</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      // Render Knockout Stage Standings / Tree
+      const fixturesObj = (localData.fixtures || {})[currentTournamentId] || {};
+      const scoresObj = (localData.scores || {})[currentTournamentId] || {};
+
+      const koFixtures = Object.values(fixturesObj).filter(f => f.group === 'KO');
+      if (koFixtures.length === 0) {
+        koContainer.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted);">Knockout fixtures not generated yet.</div>';
         return;
       }
 
-      sortedGroupKeys.forEach(gKey => {
-        const groupTeams = groups[gKey];
-        groupTeams.sort((a, b) => b.pts - a.pts || (b.pf - b.pa) - (a.pf - a.pa) || b.pf - a.pf);
+      const stageGroups = { 'Quarter Finals': [], 'Semi Finals': [], 'Finals': [] };
+      koFixtures.forEach(f => {
+        const stageCat = getStageCategory(f.stage);
+        if (stageCat === 'QF') stageGroups['Quarter Finals'].push(f);
+        else if (stageCat === 'SF') stageGroups['Semi Finals'].push(f);
+        else if (stageCat === 'FINAL') stageGroups['Finals'].push(f);
+      });
 
-        let rowsHtml = groupTeams.map((t, idx) => `
-          <tr>
-            <td class="team-cell">#${idx+1} ${t.name}<span class="players-sub">${t.players}</span></td>
-            <td>${t.p}</td><td>${t.w}</td><td>${t.l}</td><td>${t.pf}</td><td>${t.pa}</td><td><strong>${t.pts}</strong></td>
-          </tr>
-        `).join('');
+      Object.keys(stageGroups).forEach(sTitle => {
+        const matchesList = stageGroups[sTitle];
+        if (matchesList.length === 0) return;
+
+        let rowsHtml = matchesList.map(f => {
+          const s = scoresObj[f.id] || {};
+          let scoreText = '-';
+          if (f.type === 'single') {
+            scoreText = (s.scoreA !== undefined && s.scoreB !== undefined) ? `${s.scoreA} - ${s.scoreB}` : '-';
+          } else {
+            const sets = [];
+            if (s.s1a || s.s1b) sets.push(`${s.s1a||0}-${s.s1b||0}`);
+            if (s.s2a || s.s2b) sets.push(`${s.s2a||0}-${s.s2b||0}`);
+            if (s.s3a || s.s3b) sets.push(`${s.s3a||0}-${s.s3b||0}`);
+            scoreText = sets.length > 0 ? sets.join(', ') : '-';
+          }
+
+          return `
+            <tr>
+              <td class="team-cell">
+                <span class="tag tag-ko" style="font-size:0.55rem; margin-bottom:2px;">[${f.id}]</span>
+                <div>${f.teamA} <br><span style="color:var(--text-muted); font-size:0.68rem;">vs</span> ${f.teamB}</div>
+              </td>
+              <td><span class="court-badge ${getCourtBadgeClass(f.court)}">${f.court}</span></td>
+              <td><strong>${scoreText}</strong></td>
+              <td><span class="status-pill ${s.status === 'COMPLETED' ? 'status-completed' : (s.status === 'IN_PROGRESS' ? 'status-live' : 'status-upcoming')}">${s.status || 'SCHEDULED'}</span></td>
+            </tr>
+          `;
+        }).join('');
 
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
-          <div class="card-header">Group ${gKey} Standings</div>
+          <div class="card-header grp-KO">${sTitle} Standings</div>
           <table>
             <thead>
               <tr>
-                <th style="text-align:left;">Team</th><th>P</th><th>W</th><th>L</th><th>+</th><th>-</th><th>Pts</th>
+                <th style="text-align:left;">Match</th><th>Court</th><th>Score</th><th>Status</th>
               </tr>
             </thead>
             <tbody>${rowsHtml}</tbody>
           </table>
         `;
-        container.appendChild(card);
+        koContainer.appendChild(card);
       });
     }
 
@@ -1161,6 +1361,8 @@
         matches = matches.filter(m => m.group !== 'KO');
       } else if (activeStageFilter === 'KO') {
         matches = matches.filter(m => m.group === 'KO');
+      } else if (activeStageFilter === 'COMPLETED') {
+        matches = matches.filter(m => (scoresObj[m.id] || {}).status === 'COMPLETED');
       }
 
       if (selectedCourt !== 'ALL') {
@@ -1208,8 +1410,8 @@
 
         card.innerHTML = `
           <div class="match-meta">
-            <span class="tag ${isKO ? 'tag-ko' : 'tag-grp'}">[${f.id}] ${f.stage}</span>
-            <span style="font-size:0.65rem; color:var(--text-muted);">${f.time} | <span class="court-badge">${f.court || 'Court 1'}</span></span>
+            <span class="tag ${getGroupBadgeClass(f.group)}">[${f.id}] ${f.stage}</span>
+            <span style="font-size:0.65rem; color:var(--text-muted);">${f.time} | <span class="court-badge ${getCourtBadgeClass(f.court)}">${f.court || 'Court 1'}</span></span>
           </div>
           <div class="match-teams">
             <div class="team-row ${winA ? 'winner-highlight' : ''}">
@@ -1237,7 +1439,7 @@
     }
 
     function renderScoringPanel() {
-      if (!isAdmin) return;
+      if (userRole !== 'admin' && userRole !== 'scorer') return;
 
       const liveContainer = document.getElementById('live-scoring-container');
       const compContainer = document.getElementById('completed-scoring-container');
@@ -1255,7 +1457,7 @@
       if (!isTournamentLive) {
         noticeBox.innerHTML = `
           <div class="scoring-notice">
-            ⚠️ Scoring is locked! Tournament status is currently <strong>${tourneyStatus}</strong>. Change status to <strong>LIVE</strong> in order to enable point controls.
+            ⚠️ Scoring is locked! Tournament status is currently <strong>${tourneyStatus}</strong>. Switch status to <strong>LIVE</strong> to enable point controls.
           </div>
         `;
       }
@@ -1290,7 +1492,6 @@
         const isMatchInProgress = status === 'IN_PROGRESS';
         const isCompleted = status === 'COMPLETED';
 
-        // Scoring allowed ONLY if tournament is LIVE and match is IN_PROGRESS
         const allowScoringControls = isTournamentLive && isMatchInProgress;
 
         const s1Status = s.s1Status || 'ACTIVE';
@@ -1379,8 +1580,8 @@
         card.innerHTML = `
           <div class="score-board-header">
             <div>
-              <span class="tag ${f.group === 'KO' ? 'tag-ko' : 'tag-grp'}">[${f.id}] ${f.stage}</span>
-              <span style="font-size:0.75rem; font-weight:700; margin-left:4px; color:var(--primary);">${f.court || 'Court 1'}</span>
+              <span class="tag ${getGroupBadgeClass(f.group)}">[${f.id}] ${f.stage}</span>
+              <span style="font-size:0.75rem; font-weight:700; margin-left:4px;" class="court-badge ${getCourtBadgeClass(f.court)}">${f.court || 'Court 1'}</span>
             </div>
             <select class="form-control" style="font-size:0.75rem; padding:0.25rem; width:135px; font-weight:700;" ${!isTournamentLive ? 'disabled' : ''} onchange="saveScore('${f.id}', 'status', this.value)">
               <option value="SCHEDULED" ${status==='SCHEDULED'?'selected':''}>⏳ Scheduled</option>
@@ -1409,7 +1610,7 @@
     }
 
     function updateSpecificSetStatus(matchId, setKey, newStatus) {
-      if (!verifyAdminPermission()) return;
+      if (!verifyPermission('scorer')) return;
       
       const tourney = (localData.tournaments || {})[currentTournamentId] || {};
       if (tourney.status !== 'LIVE') return alert("Scoring is only enabled when tournament status is LIVE.");
@@ -1439,38 +1640,109 @@
     }
 
     function saveScore(matchId, field, val) {
-      if (!verifyAdminPermission()) return;
+      if (!verifyPermission('scorer')) return;
 
       const tourney = (localData.tournaments || {})[currentTournamentId] || {};
       if (tourney.status !== 'LIVE') return alert("Scoring is only enabled when tournament status is LIVE.");
       
       db.ref(`scores/${currentTournamentId}/${matchId}/${field}`).set(val).then(() => {
-        if (field === 'status' && val === 'COMPLETED' && matchId === 'FINAL') {
-          triggerFinalCelebration();
+        if (field === 'status' && val === 'COMPLETED') {
+          autoPropagateKnockoutWinners(matchId);
+          if (matchId === 'FINAL') {
+            triggerFinalCelebration();
+          }
         }
       });
     }
 
-    function triggerFinalCelebration() {
-      const scoresObj = (localData.scores || {})[currentTournamentId] || {};
+    function autoPropagateKnockoutWinners(matchId) {
       const fixturesObj = (localData.fixtures || {})[currentTournamentId] || {};
-      const finalFixture = fixturesObj['FINAL'] || {};
-      const finalScore = scoresObj['FINAL'] || {};
+      const scoresObj = (localData.scores || {})[currentTournamentId] || {};
+      const completedFixture = fixturesObj[matchId];
+      const matchScore = scoresObj[matchId];
 
-      let winner = "CHAMPIONS";
-      if (finalFixture.type === 'single') {
-        const scA = parseInt(finalScore.scoreA || 0, 10);
-        const scB = parseInt(finalScore.scoreB || 0, 10);
-        winner = scA > scB ? finalFixture.teamA : finalFixture.teamB;
+      if (!completedFixture || !matchScore) return;
+
+      let winner = null;
+      if (completedFixture.type === 'single') {
+        const scA = parseInt(matchScore.scoreA || 0, 10);
+        const scB = parseInt(matchScore.scoreB || 0, 10);
+        if (scA > scB) winner = completedFixture.teamA;
+        else if (scB > scA) winner = completedFixture.teamB;
       } else {
         let setsA = 0, setsB = 0;
-        if (parseInt(finalScore.s1a||0) > parseInt(finalScore.s1b||0)) setsA++; else if (parseInt(finalScore.s1b||0) > parseInt(finalScore.s1a||0)) setsB++;
-        if (parseInt(finalScore.s2a||0) > parseInt(finalScore.s2b||0)) setsA++; else if (parseInt(finalScore.s2b||0) > parseInt(finalScore.s2a||0)) setsB++;
-        if (parseInt(finalScore.s3a||0) > parseInt(finalScore.s3b||0)) setsA++; else if (parseInt(finalScore.s3b||0) > parseInt(finalScore.s3a||0)) setsB++;
-        winner = setsA > setsB ? finalFixture.teamA : finalFixture.teamB;
+        if (parseInt(matchScore.s1a||0) > parseInt(matchScore.s1b||0)) setsA++; else if (parseInt(matchScore.s1b||0) > parseInt(matchScore.s1a||0)) setsB++;
+        if (parseInt(matchScore.s2a||0) > parseInt(matchScore.s2b||0)) setsA++; else if (parseInt(matchScore.s2b||0) > parseInt(matchScore.s2a||0)) setsB++;
+        if (parseInt(matchScore.s3a||0) > parseInt(matchScore.s3b||0)) setsA++; else if (parseInt(matchScore.s3a||0) < parseInt(matchScore.s3b||0)) setsB++;
+        if (setsA > setsB) winner = completedFixture.teamA;
+        else if (setsB > setsA) winner = completedFixture.teamB;
       }
 
-      document.getElementById('winnerName').innerText = winner;
+      if (!winner) return;
+
+      const updates = {};
+      if (matchId === 'QF1') updates[`fixtures/${currentTournamentId}/SF1/teamA`] = winner;
+      if (matchId === 'QF2') updates[`fixtures/${currentTournamentId}/SF1/teamB`] = winner;
+      if (matchId === 'QF3') updates[`fixtures/${currentTournamentId}/SF2/teamA`] = winner;
+      if (matchId === 'QF4') updates[`fixtures/${currentTournamentId}/SF2/teamB`] = winner;
+      if (matchId === 'SF1') updates[`fixtures/${currentTournamentId}/FINAL/teamA`] = winner;
+      if (matchId === 'SF2') updates[`fixtures/${currentTournamentId}/FINAL/teamB`] = winner;
+
+      if (Object.keys(updates).length > 0) {
+        db.ref().update(updates);
+      }
+    }
+
+    function finalizeGroupStageAndMapQF() {
+      if (!verifyPermission('scorer')) return;
+
+      const groups = calculateGroupStandings();
+      const requiredGroups = ['A', 'B', 'C', 'D'];
+
+      const missingGroups = requiredGroups.filter(g => !groups[g] || groups[g].length < 2);
+      if (missingGroups.length > 0) {
+        if (!confirm(`Warning: Some groups (${missingGroups.join(', ')}) don't have enough teams or data. Proceed anyway?`)) {
+          return;
+        }
+      }
+
+      const getTop = (gKey, idx) => (groups[gKey] && groups[gKey][idx]) ? groups[gKey][idx].name : `${idx === 0 ? 'Winner' : 'Runner-Up'} Group ${gKey}`;
+
+      const A1 = getTop('A', 0), A2 = getTop('A', 1);
+      const B1 = getTop('B', 0), B2 = getTop('B', 1);
+      const C1 = getTop('C', 0), C2 = getTop('C', 1);
+      const D1 = getTop('D', 0), D2 = getTop('D', 1);
+
+      const updates = {};
+      // QF1: A1 vs D2
+      updates[`fixtures/${currentTournamentId}/QF1/teamA`] = A1;
+      updates[`fixtures/${currentTournamentId}/QF1/teamB`] = D2;
+
+      // QF2: B1 vs C2
+      updates[`fixtures/${currentTournamentId}/QF2/teamA`] = B1;
+      updates[`fixtures/${currentTournamentId}/QF2/teamB`] = C2;
+
+      // QF3: A2 vs C1
+      updates[`fixtures/${currentTournamentId}/QF3/teamA`] = A2;
+      updates[`fixtures/${currentTournamentId}/QF3/teamB`] = C1;
+
+      // QF4: B2 vs D1
+      updates[`fixtures/${currentTournamentId}/QF4/teamA`] = B2;
+      updates[`fixtures/${currentTournamentId}/QF4/teamB`] = D1;
+
+      db.ref().update(updates).then(() => {
+        alert("Group Stage Finalized! Quarter-Final teams mapped automatically:\n\n" +
+              `QF1: ${A1} vs ${D2}\n` +
+              `QF2: ${B1} vs ${C2}\n` +
+              `QF3: ${A2} vs ${C1}\n` +
+              `QF4: ${B2} vs ${D1}`);
+      });
+    }
+
+    function triggerFinalCelebration() {
+      checkTournamentChampion();
+      const championName = document.getElementById('top-champion-name').innerText;
+      document.getElementById('winnerName').innerText = championName || "CHAMPIONS";
       document.getElementById('winnerModal').style.display = 'flex';
 
       if (typeof confetti === 'function') {
@@ -1502,7 +1774,7 @@
     }
 
     function processExcelUpload() {
-      if (!verifyAdminPermission()) return;
+      if (!verifyPermission('admin')) return;
       const fileInput = document.getElementById('excel-file-input');
       const file = fileInput.files[0];
       if (!file) return alert("Select an Excel file first.");
@@ -1535,7 +1807,7 @@
     }
 
     function batchAddTeamsText() {
-      if (!verifyAdminPermission()) return;
+      if (!verifyPermission('admin')) return;
       const rawText = document.getElementById('batch-teams-input').value.trim();
       if (!rawText) return alert("Enter team list details.");
 
@@ -1589,9 +1861,8 @@
       return `${hours}:${minsStr} ${ampm}`;
     }
 
-    // Properly Shuffles Group Matches across Groups (A1 vs A2, B1 vs B2, C1 vs C2...) so teams rest evenly
     function autoGenerateFixtures() {
-      if (!verifyAdminPermission()) return;
+      if (!verifyPermission('admin')) return;
       const teamsObj = (localData.teams || {})[currentTournamentId] || {};
       const teamList = Object.values(teamsObj);
       if (teamList.length === 0) return alert("No teams found. Upload teams first.");
@@ -1609,7 +1880,6 @@
         }
       });
 
-      // Generate round robin pairings for each group
       const rawGroupMatches = [];
       const groupKeys = Object.keys(groups).sort();
 
@@ -1626,7 +1896,6 @@
         }
       });
 
-      // Interleave/Shuffle group matches to ensure single group isn't played all in a row
       const interleavedMatches = [];
       const groupMatchQueues = {};
       groupKeys.forEach(gKey => {
@@ -1667,37 +1936,36 @@
         matchCounter++;
       }
 
-      // 1. Interleaved Group Stage Fixtures
       interleavedMatches.forEach((m) => {
         const mId = 'M' + (matchCounter + 1);
         scheduleMatch(mId, `Grp ${m.group}`, m.teamA, m.teamB, 'single', m.group);
       });
 
-      // 2. Knockout Quarter Final Pairings: A1-D2, B1-C2, A2-C1, B2-D1
+      // Knockout Quarter Final Placeholders
       scheduleMatch('QF1', 'QF 1 (A1 vs D2)', 'Winner Group A (A1)', 'Runner-Up Group D (D2)', 'ko', 'KO');
       scheduleMatch('QF2', 'QF 2 (B1 vs C2)', 'Winner Group B (B1)', 'Runner-Up Group C (C2)', 'ko', 'KO');
       scheduleMatch('QF3', 'QF 3 (A2 vs C1)', 'Runner-Up Group A (A2)', 'Winner Group C (C1)', 'ko', 'KO');
       scheduleMatch('QF4', 'QF 4 (B2 vs D1)', 'Runner-Up Group B (B2)', 'Winner Group D (D1)', 'ko', 'KO');
 
-      // Semi Finals
+      // Semi Finals Placeholders
       scheduleMatch('SF1', 'Semi Final 1', 'Winner QF1', 'Winner QF2', 'ko', 'KO');
       scheduleMatch('SF2', 'Semi Final 2', 'Winner QF3', 'Winner QF4', 'ko', 'KO');
 
-      // Championship Final
+      // Championship Final Placeholder
       scheduleMatch('FINAL', 'Championship Final', 'Winner SF1', 'Winner SF2', 'ko', 'KO');
 
       db.ref(`fixtures/${currentTournamentId}`).set(generatedFixtures).then(() => {
-        alert("Fixtures generated successfully! Group matches are properly interleaved across courts to allow team rest.");
+        alert("Fixtures generated successfully! Matches are properly interleaved across courts to allow adequate rest.");
       });
     }
 
     function clearFixtures() {
-      if (!verifyAdminPermission()) return;
+      if (!verifyPermission('admin')) return;
       if (confirm("Clear all fixtures?")) db.ref(`fixtures/${currentTournamentId}`).remove();
     }
 
     function resetCurrentScores() {
-      if (!verifyAdminPermission()) return;
+      if (!verifyPermission('admin')) return;
       if (confirm("Reset all match scores?")) db.ref(`scores/${currentTournamentId}`).remove();
     }
   </script>
