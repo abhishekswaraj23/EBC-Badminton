@@ -578,7 +578,6 @@
       margin-bottom: 0.75rem;
     }
 
-    /* COMPACT BOTTOM RIGHT FLOATING EXPORT PDF BUTTON */
     .btn-export-floating {
       position: fixed;
       bottom: 1.25rem;
@@ -640,8 +639,8 @@
       </div>
     </div>
     <div class="nav-actions">
-      <!-- FEATURE 4: DARK MODE SWITCH BUTTON -->
       <button class="btn btn-outline btn-sm" id="dark-mode-toggle" onclick="toggleDarkMode()">🌙 Dark Mode</button>
+      <button class="btn btn-primary btn-sm" id="auth-btn" onclick="openAuthModal()">🔑 Login</button>
       <span id="role-indicator" class="status-pill status-viewer">VIEWER MODE</span>
       <span id="live-indicator" class="status-pill status-upcoming">UPCOMING</span>
     </div>
@@ -696,12 +695,10 @@
           </div>
           
           <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
-            <!-- TEAM FILTER -->
             <div style="display:flex; gap:0.3rem; align-items:center;">
               <strong style="font-size:0.75rem; color:var(--text-muted);">Team:</strong>
               <select id="team-filter" class="tournament-select" style="padding:0.25rem 0.4rem;" onchange="renderInteractiveMatches()"></select>
             </div>
-            <!-- COURT FILTER -->
             <div style="display:flex; gap:0.3rem; align-items:center;">
               <strong style="font-size:0.75rem; color:var(--text-muted);">Court:</strong>
               <select id="court-filter" class="tournament-select" style="padding:0.25rem 0.4rem;" onchange="renderInteractiveMatches()"></select>
@@ -710,7 +707,6 @@
         </div>
 
         <div class="dashboard-grid" id="dashboard-grid-container">
-          <!-- FEATURE 3: CURRENTLY PLAYING AND UP NEXT ARE HIDDEN IF TOURNAMENT IS COMPLETED -->
           <div class="dashboard-col" id="col-currently-playing">
             <div class="col-title">🔴 CURRENTLY PLAYING</div>
             <div id="live-matches-container"></div>
@@ -761,7 +757,6 @@
     <div id="manage-view" class="tab-view">
       <div class="admin-grid">
         
-        <!-- DYNAMIC CONFIGURATION FORM -->
         <div class="admin-card">
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--bg); padding-bottom:0.35rem; margin-bottom:0.6rem;">
             <h3 style="margin:0; border:none; padding:0;">1. Setup & Format</h3>
@@ -795,7 +790,6 @@
 
           <hr style="border:0; border-top:1px solid var(--border); margin:0.6rem 0;">
 
-          <!-- DYNAMIC FORMAT SELECTOR -->
           <div class="form-group">
             <label>Main Format</label>
             <select id="t-format-type" class="form-control" onchange="toggleFormatFields()">
@@ -805,7 +799,6 @@
             </select>
           </div>
 
-          <!-- DYNAMIC KNOCKOUT STAGE CONTROL -->
           <div class="form-group" id="ko-stage-selector">
             <label>Knockout Qualification Stage</label>
             <select id="t-ko-start" class="form-control">
@@ -877,7 +870,6 @@
 
   </div>
 
-  <!-- COMPACT FLOATING EXPORT BUTTON AT BOTTOM RIGHT -->
   <button class="btn btn-primary btn-export-floating" onclick="exportDataToPDF()" title="Export PDF Standings & Schedule">
     📄 Export PDF
   </button>
@@ -890,6 +882,26 @@
       <div id="winnerName" style="font-size: 1.8rem; font-weight: 800; color: var(--accent); margin: 0.5rem 0 0.2rem 0;">TEAM A</div>
       <div id="winnerPlayers" style="font-size: 1rem; font-weight: 600; color: var(--text-muted); margin-bottom: 1.2rem;">Player 1 & Player 2</div>
       <button class="btn btn-primary" onclick="closeWinnerModal()">Close Celebration</button>
+    </div>
+  </div>
+
+  <!-- AUTH / LOGIN MODAL -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-content" style="max-width:360px;">
+      <h3 style="margin-top:0; color:var(--primary);">Authorized Sign-In</h3>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:1rem;">Log in to access scoring or tournament administration.</p>
+      <div class="form-group" style="text-align:left;">
+        <label>Email</label>
+        <input type="email" id="auth-email" class="form-control" placeholder="scorer@ebc.com">
+      </div>
+      <div class="form-group" style="text-align:left;">
+        <label>Password</label>
+        <input type="password" id="auth-password" class="form-control" placeholder="••••••••">
+      </div>
+      <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+        <button class="btn btn-outline" style="flex:1;" onclick="closeAuthModal()">Cancel</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="submitLogin()">Sign In</button>
+      </div>
     </div>
   </div>
 
@@ -917,23 +929,24 @@
     const STAGE_PRIORITY = { 'GRP': 1, 'QF': 2, 'SF': 3, 'FINAL': 4 };
 
     window.addEventListener('DOMContentLoaded', () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const adminParam = urlParams.get('admin');
-      const roleParam = urlParams.get('role');
-      const adminPass ='ebcadmin@123';
-      const scorerPass ='ebcscorer123';
-
-      if (adminParam === adminPass) {
-        userRole = 'admin';
-      } else if (roleParam === scorerPass || adminParam === scorerPass) {
-        userRole = 'scorer';
-      } else {
-        userRole = 'viewer';
-      }
-
-      applyRoleUI();
-
-      auth.signInAnonymously().catch(err => console.error("Firebase Anonymous Auth Error:", err));
+      auth.onAuthStateChanged((user) => {
+        const authBtn = document.getElementById('auth-btn');
+        if (user) {
+          authBtn.innerText = "🚪 Logout";
+          authBtn.onclick = handleLogout;
+          
+          if (user.email && user.email.includes("admin")) {
+            userRole = "admin";
+          } else {
+            userRole = "scorer";
+          }
+        } else {
+          userRole = "viewer";
+          authBtn.innerText = "🔑 Login";
+          authBtn.onclick = openAuthModal;
+        }
+        applyRoleUI();
+      });
 
       db.ref().on('value', (snapshot) => {
         const val = snapshot.val() || {};
@@ -956,7 +969,39 @@
       });
     });
 
-    // FEATURE 4: TOGGLE DARK MODE FUNCTION
+    function openAuthModal() {
+      document.getElementById('authModal').style.display = 'flex';
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').style.display = 'none';
+    }
+
+    function submitLogin() {
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+
+      if (!email || !password) {
+        alert("Please enter both email and password.");
+        return;
+      }
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          closeAuthModal();
+          alert("Logged in successfully!");
+        })
+        .catch((err) => {
+          alert("Login Failed: " + err.message);
+        });
+    }
+
+    function handleLogout() {
+      auth.signOut().then(() => {
+        alert("Logged out successfully.");
+      });
+    }
+
     function toggleDarkMode() {
       document.body.classList.toggle('dark-mode');
       const isDark = document.body.classList.contains('dark-mode');
@@ -1194,7 +1239,6 @@
         liveInd.innerText = "UPCOMING";
       }
 
-      // FEATURE 3: HIDE CURRENTLY PLAYING AND UP NEXT COLUMNS IF TOURNAMENT IS COMPLETED
       const colCurrentlyPlaying = document.getElementById('col-currently-playing');
       const colUpNext = document.getElementById('col-up-next');
       if (tourneyStatus === 'COMPLETED') {
@@ -1380,7 +1424,6 @@
       return groups;
     }
 
-    // FEATURE 1: SHOW POINT DIFFERENCE (+-) IN GROUP STANDINGS
     function renderStandingsAndGroups() {
       const container = document.getElementById('groups-container');
       const koContainer = document.getElementById('knockout-tree-container');
@@ -1941,7 +1984,6 @@
       document.getElementById('winnerModal').style.display = 'none';
     }
 
-    // FEATURE 1 & 2: EXPORT PDF INCLUDES POINT DIFFERENCE (+-) AND RUNS FROM BOTTOM BAR
     function exportDataToPDF() {
       if (!window.jspdf) {
         alert("PDF library loading... please try again in a moment.");
@@ -2271,7 +2313,7 @@
           else if (koStart === 'SF') {
             scheduleMatch('SF1', 'Semi Final 1', 'Winner Group A', 'Runner-Up Group B', 'ko', 'KO');
             scheduleMatch('SF2', 'Semi Final 2', 'Winner Group B', 'Runner-Up Group A', 'ko', 'KO');
-            scheduleMatch('FINAL', 'Championship Final', 'Winner SF1', 'Winner SF2', 'ko', 'KO');
+            scheduleMatch('FINAL', 'Championship Final', 'Winner SF1', 'Winner SF2', 'KO');
           } 
           else if (koStart === 'FINAL') {
             scheduleMatch('FINAL', 'Championship Final', 'Winner Group A', 'Winner Group B', 'ko', 'KO');
