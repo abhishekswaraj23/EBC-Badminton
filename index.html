@@ -28,6 +28,8 @@
       --warning: #F59E0B;
       --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
       --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --col-bg: #F8FAFC;
+      --card-completed-bg: #F8FAFC;
 
       /* Group Dynamic Colors */
       --grp-a: #3B82F6;
@@ -35,6 +37,22 @@
       --grp-c: #EC4899;
       --grp-d: #F59E0B;
       --grp-ko: #D97706;
+    }
+
+    /* DARK MODE THEME VARIABLE OVERRIDES */
+    body.dark-mode {
+      --primary: #3B82F6;
+      --primary-hover: #60A5FA;
+      --accent: #10B981;
+      --bg: #0F172A;
+      --surface: #1E293B;
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: #334155;
+      --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.5);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5);
+      --col-bg: #111827;
+      --card-completed-bg: #182232;
     }
 
     * { box-sizing: border-box; }
@@ -46,6 +64,7 @@
       padding: 0;
       background-color: var(--bg);
       line-height: 1.3;
+      transition: background-color 0.2s, color 0.2s;
     }
 
     .navbar {
@@ -105,7 +124,7 @@
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-hover); }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-    .btn-outline:hover { background: #F8FAFC; }
+    .btn-outline:hover { background: var(--border); }
     .btn-outline.active { background: var(--primary); color: white; border-color: var(--primary); }
     .btn-danger { background: var(--danger); color: white; }
     .btn-danger:hover { background: #DC2626; }
@@ -132,7 +151,7 @@
 
     .container {
       max-width: 1280px;
-      margin: 0.75rem auto;
+      margin: 0.75rem auto 4rem auto;
       padding: 0 0.5rem;
     }
 
@@ -207,7 +226,8 @@
       font-size: 0.8rem;
       border: 1px solid var(--border);
       border-radius: 0.375rem;
-      background: white;
+      background: var(--surface);
+      color: var(--text-main);
       outline: none;
     }
 
@@ -267,7 +287,7 @@
     }
 
     .dashboard-col {
-      background: #F8FAFC;
+      background: var(--col-bg);
       border: 1px solid var(--border);
       border-radius: 0.5rem;
       padding: 0.6rem;
@@ -310,7 +330,7 @@
     }
 
     th {
-      background: #F8FAFC;
+      background: var(--col-bg);
       color: var(--text-muted);
       font-weight: 700;
       text-transform: uppercase;
@@ -336,13 +356,13 @@
 
     .match-card.is-live {
       border-left: 4px solid var(--accent);
-      background: #F0FDF4;
+      background: rgba(16, 185, 129, 0.1);
     }
 
     .match-card.is-completed {
       border-left: 4px solid var(--text-muted);
       opacity: 0.85;
-      background: #F8FAFC;
+      background: var(--card-completed-bg);
     }
 
     .match-meta {
@@ -441,8 +461,8 @@
     }
 
     .score-board-card.is-completed {
-      background: #F8FAFC;
-      border-color: #CBD5E1;
+      background: var(--card-completed-bg);
+      border-color: var(--border);
       opacity: 0.9;
     }
 
@@ -455,7 +475,7 @@
     }
 
     .score-side-box {
-      background: #F8FAFC;
+      background: var(--col-bg);
       border: 1px solid var(--border);
       border-radius: 0.5rem;
       padding: 0.5rem;
@@ -468,7 +488,7 @@
     }
 
     .score-side-box.is-leading {
-      background: #ECFDF5;
+      background: rgba(16, 185, 129, 0.15);
       border-color: var(--accent);
     }
 
@@ -515,13 +535,13 @@
       font-weight: 800;
       border-radius: 0.375rem;
       border: 1px solid var(--border);
-      background: white;
+      background: var(--surface);
       color: var(--text-main);
       cursor: pointer;
       box-shadow: var(--shadow-sm);
     }
-    .btn-score:hover:not(:disabled) { background: #F1F5F9; }
-    .btn-score:disabled { opacity: 0.3; cursor: not-allowed; background: #E2E8F0; }
+    .btn-score:hover:not(:disabled) { background: var(--bg); }
+    .btn-score:disabled { opacity: 0.3; cursor: not-allowed; background: var(--border); }
 
     .btn-score-add {
       background: var(--accent);
@@ -556,6 +576,22 @@
       margin-bottom: 0.75rem;
     }
 
+    /* BOTTOM EXPORT PDF ACTION BAR */
+    .bottom-export-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 0.6rem 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -566,7 +602,8 @@
       z-index: 1000;
     }
     .modal-content {
-      background: white;
+      background: var(--surface);
+      color: var(--text-main);
       padding: 2rem;
       border-radius: 1rem;
       text-align: center;
@@ -604,7 +641,8 @@
       </div>
     </div>
     <div class="nav-actions">
-      <button class="btn btn-outline btn-sm" onclick="exportDataToPDF()" title="Export PDF Standings & Schedule">📄 Export PDF</button>
+      <!-- FEATURE 4: DARK MODE SWITCH BUTTON -->
+      <button class="btn btn-outline btn-sm" id="dark-mode-toggle" onclick="toggleDarkMode()">🌙 Dark Mode</button>
       <span id="role-indicator" class="status-pill status-viewer">VIEWER MODE</span>
       <span id="live-indicator" class="status-pill status-upcoming">UPCOMING</span>
     </div>
@@ -649,7 +687,7 @@
 
       <!-- UNIFIED SCHEDULE TAB -->
       <div id="v-schedule" class="sub-tab-view">
-        <div style="margin-bottom:0.75rem; display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; justify-content:space-between; background:white; padding:0.5rem 0.75rem; border-radius:0.5rem; border:1px solid var(--border);">
+        <div style="margin-bottom:0.75rem; display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; justify-content:space-between; background:var(--surface); padding:0.5rem 0.75rem; border-radius:0.5rem; border:1px solid var(--border);">
           <div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap;">
             <strong style="font-size:0.75rem; color:var(--text-muted);">Stage:</strong>
             <button class="btn btn-outline btn-sm active" id="btn-filter-all" onclick="setStageFilter('ALL', this)">All</button>
@@ -659,7 +697,7 @@
           </div>
           
           <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
-            <!-- TEAM FILTER (FEATURE 5) -->
+            <!-- TEAM FILTER -->
             <div style="display:flex; gap:0.3rem; align-items:center;">
               <strong style="font-size:0.75rem; color:var(--text-muted);">Team:</strong>
               <select id="team-filter" class="tournament-select" style="padding:0.25rem 0.4rem;" onchange="renderInteractiveMatches()"></select>
@@ -672,16 +710,17 @@
           </div>
         </div>
 
-        <div class="dashboard-grid">
-          <div class="dashboard-col">
+        <div class="dashboard-grid" id="dashboard-grid-container">
+          <!-- FEATURE 3: CURRENTLY PLAYING AND UP NEXT ARE HIDDEN IF TOURNAMENT IS COMPLETED -->
+          <div class="dashboard-col" id="col-currently-playing">
             <div class="col-title">🔴 CURRENTLY PLAYING</div>
             <div id="live-matches-container"></div>
           </div>
-          <div class="dashboard-col">
+          <div class="dashboard-col" id="col-up-next">
             <div class="col-title">⏭️ UP NEXT</div>
             <div id="next-matches-container"></div>
           </div>
-          <div class="dashboard-col">
+          <div class="dashboard-col" id="col-completed">
             <div class="col-title">✅ COMPLETED MATCHES</div>
             <div id="completed-matches-container"></div>
           </div>
@@ -698,7 +737,7 @@
 
     <!-- VIEW 2: SCORING PANEL -->
     <div id="scoring-view" class="tab-view">
-      <div style="background: white; border: 1px solid var(--border); border-radius:0.5rem; padding:0.75rem; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius:0.5rem; padding:0.75rem; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
         <div>
           <h3 style="margin:0 0 0.15rem 0; color:var(--primary); font-size:0.95rem;">⚡ Real-Time Court Scoring Control</h3>
           <p style="font-size:0.75rem; color:var(--text-muted); margin:0;">Score matches dynamically. Auto-mapping available once group stage concludes.</p>
@@ -801,7 +840,7 @@
 
         <div class="admin-card">
           <h3>2. Teams & Groups Setup</h3>
-          <div style="margin-bottom:0.6rem; padding:0.5rem; background:#F8FAFC; border-radius:0.375rem; border:1px solid var(--border);">
+          <div style="margin-bottom:0.6rem; padding:0.5rem; background:var(--col-bg); border-radius:0.375rem; border:1px solid var(--border);">
             <strong style="font-size:0.7rem; color:var(--text-main);">Excel Format (.xlsx / .csv):</strong>
             <p style="font-size:0.7rem; color:var(--text-muted); margin:0.1rem 0 0.3rem 0;">Headers: <code>Team Name</code>, <code>Players</code>, <code>Group</code></p>
             <button class="btn btn-outline btn-sm" onclick="downloadExcelTemplate()">⬇️ Template</button>
@@ -837,6 +876,13 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- FEATURE 2: BOTTOM EXPORT PDF ACTION BAR -->
+  <div class="bottom-export-bar">
+    <button class="btn btn-primary" onclick="exportDataToPDF()" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;" title="Export PDF Standings & Schedule">
+      📄 Export Standings & Schedule to PDF
+    </button>
   </div>
 
   <!-- WINNER CELEBRATION MODAL -->
@@ -912,6 +958,16 @@
         renderActiveTournament();
       });
     });
+
+    // FEATURE 4: TOGGLE DARK MODE FUNCTION
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      const btn = document.getElementById('dark-mode-toggle');
+      if (btn) {
+        btn.innerText = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+      }
+    }
 
     function applyRoleUI() {
       const roleInd = document.getElementById('role-indicator');
@@ -1141,6 +1197,17 @@
         liveInd.innerText = "UPCOMING";
       }
 
+      // FEATURE 3: HIDE CURRENTLY PLAYING AND UP NEXT COLUMNS IF TOURNAMENT IS COMPLETED
+      const colCurrentlyPlaying = document.getElementById('col-currently-playing');
+      const colUpNext = document.getElementById('col-up-next');
+      if (tourneyStatus === 'COMPLETED') {
+        if (colCurrentlyPlaying) colCurrentlyPlaying.style.display = 'none';
+        if (colUpNext) colUpNext.style.display = 'none';
+      } else {
+        if (colCurrentlyPlaying) colCurrentlyPlaying.style.display = 'block';
+        if (colUpNext) colUpNext.style.display = 'block';
+      }
+
       const actionContainer = document.getElementById('status-action-container');
       if (userRole === 'admin') {
         actionContainer.innerHTML = `
@@ -1167,7 +1234,6 @@
         scoringCourtSelect.innerHTML += `<option value="${c}">${c}</option>`; 
       });
 
-      // Populate Team Filter (Feature 5)
       if (teamSelect) {
         teamSelect.innerHTML = '<option value="ALL">All Teams</option>';
         const teamsObj = (localData.teams || {})[currentTournamentId] || {};
@@ -1188,7 +1254,6 @@
       db.ref(`tournaments/${currentTournamentId}/status`).set(status);
     }
 
-    // FEATURE 4: SHOW PLAYER NAME IN WINNER BANNER
     function checkTournamentChampion() {
       const scoresObj = (localData.scores || {})[currentTournamentId] || {};
       const fixturesObj = (localData.fixtures || {})[currentTournamentId] || {};
@@ -1318,6 +1383,7 @@
       return groups;
     }
 
+    // FEATURE 1: SHOW POINT DIFFERENCE (+-) IN GROUP STANDINGS
     function renderStandingsAndGroups() {
       const container = document.getElementById('groups-container');
       const koContainer = document.getElementById('knockout-tree-container');
@@ -1332,12 +1398,16 @@
       } else {
         sortedGroupKeys.forEach(gKey => {
           const groupTeams = groups[gKey];
-          let rowsHtml = groupTeams.map((t, idx) => `
-            <tr>
-              <td class="team-cell">#${idx+1} ${t.name}<span class="players-sub">${t.players}</span></td>
-              <td>${t.p}</td><td>${t.w}</td><td>${t.l}</td><td>${t.pf}</td><td>${t.pa}</td><td><strong>${t.pts}</strong></td>
-            </tr>
-          `).join('');
+          let rowsHtml = groupTeams.map((t, idx) => {
+            const diff = t.pf - t.pa;
+            const diffStr = diff > 0 ? `+${diff}` : `${diff}`;
+            return `
+              <tr>
+                <td class="team-cell">#${idx+1} ${t.name}<span class="players-sub">${t.players}</span></td>
+                <td>${t.p}</td><td>${t.w}</td><td>${t.l}</td><td>${t.pf}</td><td>${t.pa}</td><td><strong>${diffStr}</strong></td><td><strong>${t.pts}</strong></td>
+              </tr>
+            `;
+          }).join('');
 
           const headerClass = `grp-${gKey.toUpperCase()}`;
           const card = document.createElement('div');
@@ -1347,7 +1417,7 @@
             <table>
               <thead>
                 <tr>
-                  <th style="text-align:left;">Team</th><th>P</th><th>W</th><th>L</th><th>+</th><th>-</th><th>Pts</th>
+                  <th style="text-align:left;">Team</th><th>P</th><th>W</th><th>L</th><th>+</th><th>-</th><th>+/-</th><th>Pts</th>
                 </tr>
               </thead>
               <tbody>${rowsHtml}</tbody>
@@ -1421,7 +1491,6 @@
       });
     }
 
-    // FEATURE 5: FILTER BY TEAM IN SCHEDULE MATCHES
     function renderInteractiveMatches() {
       const selectedCourt = document.getElementById('court-filter').value;
       const selectedTeam = document.getElementById('team-filter') ? document.getElementById('team-filter').value : 'ALL';
@@ -1518,7 +1587,6 @@
       if (counts.comp === 0) compContainer.innerHTML = emptyMsg("No completed matches yet.");
     }
 
-    // FEATURE 2: ADD SHUTTLE MARK FOR SERVING / POINT WINNER TEAM
     function renderScoringPanel() {
       if (userRole !== 'admin' && userRole !== 'scorer') return;
 
@@ -1570,7 +1638,7 @@
         const s = scoresObj[f.id] || {};
         const status = s.status || 'SCHEDULED';
         const activeSet = s.activeSet || 's1';
-        const servingTeam = s.servingTeam || 'A'; // Defaults to Team A serving
+        const servingTeam = s.servingTeam || 'A';
         const isMatchInProgress = status === 'IN_PROGRESS';
         const isCompleted = status === 'COMPLETED';
 
@@ -1585,7 +1653,6 @@
 
         let scoreControlHtml = '';
 
-        // Helper to render shuttle mark
         const shuttleHtml = (teamKey) => {
           const isServing = servingTeam === teamKey;
           return `<span class="shuttle-badge ${isServing ? '' : 'shuttle-inactive'}" 
@@ -1797,7 +1864,6 @@
       }
     }
 
-    // FEATURE 1 FIX: HANDLES SINGLE GROUP & MULTI-GROUP MAP
     function finalizeGroupStageAndMapQF() {
       if (!verifyPermission('scorer')) return;
 
@@ -1826,13 +1892,13 @@
       if (isSingleGroup) {
         const gKey = groupKeys[0];
         if (koStart === 'SF') {
-          updates[`fixtures/${currentTournamentId}/SF1/teamA`] = getTop(gKey, 0); // 1st
-          updates[`fixtures/${currentTournamentId}/SF1/teamB`] = getTop(gKey, 3); // 4th
-          updates[`fixtures/${currentTournamentId}/SF2/teamA`] = getTop(gKey, 1); // 2nd
-          updates[`fixtures/${currentTournamentId}/SF2/teamB`] = getTop(gKey, 2); // 3rd
+          updates[`fixtures/${currentTournamentId}/SF1/teamA`] = getTop(gKey, 0);
+          updates[`fixtures/${currentTournamentId}/SF1/teamB`] = getTop(gKey, 3);
+          updates[`fixtures/${currentTournamentId}/SF2/teamA`] = getTop(gKey, 1);
+          updates[`fixtures/${currentTournamentId}/SF2/teamB`] = getTop(gKey, 2);
         } else if (koStart === 'FINAL') {
-          updates[`fixtures/${currentTournamentId}/FINAL/teamA`] = getTop(gKey, 0); // 1st
-          updates[`fixtures/${currentTournamentId}/FINAL/teamB`] = getTop(gKey, 1); // 2nd
+          updates[`fixtures/${currentTournamentId}/FINAL/teamA`] = getTop(gKey, 0);
+          updates[`fixtures/${currentTournamentId}/FINAL/teamB`] = getTop(gKey, 1);
         }
       } else {
         if (koStart === 'QF') {
@@ -1860,7 +1926,6 @@
       });
     }
 
-    // FEATURE 4: WINNER CELEBRATION MODAL WITH PLAYER NAMES
     function triggerFinalCelebration() {
       checkTournamentChampion();
       const championName = document.getElementById('top-champion-name').innerText;
@@ -1879,7 +1944,7 @@
       document.getElementById('winnerModal').style.display = 'none';
     }
 
-    // FEATURE 3: EXPORT STANDINGS & SCHEDULE TO PDF
+    // FEATURE 1 & 2: EXPORT PDF INCLUDES POINT DIFFERENCE (+-) AND RUNS FROM BOTTOM BAR
     function exportDataToPDF() {
       if (!window.jspdf) {
         alert("PDF library loading... please try again in a moment.");
@@ -1901,7 +1966,6 @@
 
       let currentY = 28;
 
-      // 1. Group Standings
       const groups = calculateGroupStandings();
       const sortedGroupKeys = Object.keys(groups).sort();
 
@@ -1913,15 +1977,19 @@
 
         sortedGroupKeys.forEach(gKey => {
           const groupTeams = groups[gKey];
-          const tableData = groupTeams.map((t, idx) => [
-            `#${idx+1} ${t.name}`,
-            t.players || '-',
-            t.p, t.w, t.l, t.pf, t.pa, t.pts
-          ]);
+          const tableData = groupTeams.map((t, idx) => {
+            const diff = t.pf - t.pa;
+            const diffStr = diff > 0 ? `+${diff}` : `${diff}`;
+            return [
+              `#${idx+1} ${t.name}`,
+              t.players || '-',
+              t.p, t.w, t.l, t.pf, t.pa, diffStr, t.pts
+            ];
+          });
 
           doc.autoTable({
             startY: currentY,
-            head: [[`Group ${gKey}`, 'Players', 'P', 'W', 'L', '+', '-', 'Pts']],
+            head: [[`Group ${gKey}`, 'Players', 'P', 'W', 'L', '+', '-', '+/-', 'Pts']],
             body: tableData,
             theme: 'striped',
             headStyles: { fillColor: [30, 58, 138] },
@@ -1932,7 +2000,6 @@
         });
       }
 
-      // 2. Fixtures & Schedule
       const fixturesObj = (localData.fixtures || {})[currentTournamentId] || {};
       const scoresObj = (localData.scores || {})[currentTournamentId] || {};
       let matches = Object.keys(fixturesObj).map(k => ({ id: k, ...fixturesObj[k] }));
@@ -2089,7 +2156,6 @@
       return `${hours}:${minsStr} ${ampm}`;
     }
 
-    // FEATURE 1 FIX: HANDLES FIXTURE GENERATION WHEN ONLY 1 SINGLE GROUP EXISTS
     function autoGenerateFixtures() {
       if (!verifyPermission('admin')) return;
       
@@ -2186,7 +2252,6 @@
 
       if (formatType !== 'ROUND_ROBIN') {
         if (numGroups === 1) {
-          // Single Group Knockout Setup
           const gName = groupKeys[0] || 'A';
           if (koStart === 'SF') {
             scheduleMatch('SF1', 'Semi Final 1', `1st Group ${gName}`, `4th Group ${gName}`, 'ko', 'KO');
@@ -2196,7 +2261,6 @@
             scheduleMatch('FINAL', 'Championship Final', `1st Group ${gName}`, `2nd Group ${gName}`, 'ko', 'KO');
           }
         } else {
-          // Multi-Group Knockout Setup
           if (koStart === 'QF') {
             scheduleMatch('QF1', 'QF 1 (A1 vs D2)', 'Winner Group A', 'Runner-Up Group D', 'ko', 'KO');
             scheduleMatch('QF2', 'QF 2 (B1 vs C2)', 'Winner Group B', 'Runner-Up Group C', 'ko', 'KO');
