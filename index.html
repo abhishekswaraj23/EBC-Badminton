@@ -10,6 +10,9 @@
   
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- jsPDF & AutoTable for PDF Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
   <style>
     :root {
@@ -217,10 +220,10 @@
       text-align: center;
       box-shadow: var(--shadow-md);
       display: none;
-      animation: pulse 2s infinite;
     }
     .champion-banner h2 { margin: 0; font-size: 1.4rem; font-weight: 800; }
     .champion-banner p { margin: 0.2rem 0 0 0; font-weight: 700; font-size: 1.1rem; }
+    .champion-players { font-size: 0.85rem; color: #92400E; font-weight: 600; margin-top: 2px; }
 
     .event-banner {
       background: var(--surface);
@@ -461,12 +464,23 @@
       align-items: center;
       gap: 0.3rem;
       flex: 1;
+      position: relative;
     }
 
     .score-side-box.is-leading {
       background: #ECFDF5;
       border-color: var(--accent);
     }
+
+    .shuttle-badge {
+      font-size: 1rem;
+      cursor: pointer;
+      display: inline-block;
+      margin-left: 4px;
+      transition: transform 0.2s;
+    }
+    .shuttle-badge:hover { transform: scale(1.2); }
+    .shuttle-inactive { opacity: 0.25; filter: grayscale(100%); }
 
     .team-title {
       font-size: 0.85rem;
@@ -590,6 +604,7 @@
       </div>
     </div>
     <div class="nav-actions">
+      <button class="btn btn-outline btn-sm" onclick="exportDataToPDF()" title="Export PDF Standings & Schedule">📄 Export PDF</button>
       <span id="role-indicator" class="status-pill status-viewer">VIEWER MODE</span>
       <span id="live-indicator" class="status-pill status-upcoming">UPCOMING</span>
     </div>
@@ -608,6 +623,7 @@
     <div id="top-champion-banner" class="champion-banner">
       <h2>🏆 TOURNAMENT CHAMPION</h2>
       <p id="top-champion-name">Team Name</p>
+      <div id="top-champion-players" class="champion-players"></div>
     </div>
 
     <div class="event-banner">
@@ -641,9 +657,18 @@
             <button class="btn btn-outline btn-sm" id="btn-filter-ko" onclick="setStageFilter('KO', this)">Knockouts</button>
             <button class="btn btn-outline btn-sm" id="btn-filter-comp" onclick="setStageFilter('COMPLETED', this)">✅ Completed Matches</button>
           </div>
-          <div style="display:flex; gap:0.4rem; align-items:center;">
-            <strong style="font-size:0.75rem; color:var(--text-muted);">Court:</strong>
-            <select id="court-filter" class="tournament-select" style="padding:0.25rem 0.4rem;" onchange="renderInteractiveMatches()"></select>
+          
+          <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+            <!-- TEAM FILTER (FEATURE 5) -->
+            <div style="display:flex; gap:0.3rem; align-items:center;">
+              <strong style="font-size:0.75rem; color:var(--text-muted);">Team:</strong>
+              <select id="team-filter" class="tournament-select" style="padding:0.25rem 0.4rem;" onchange="renderInteractiveMatches()"></select>
+            </div>
+            <!-- COURT FILTER -->
+            <div style="display:flex; gap:0.3rem; align-items:center;">
+              <strong style="font-size:0.75rem; color:var(--text-muted);">Court:</strong>
+              <select id="court-filter" class="tournament-select" style="padding:0.25rem 0.4rem;" onchange="renderInteractiveMatches()"></select>
+            </div>
           </div>
         </div>
 
@@ -819,7 +844,8 @@
     <div class="modal-content">
       <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">🏆</div>
       <h2 style="margin: 0; color: var(--primary); font-size: 1.4rem;">TOURNAMENT CHAMPIONS</h2>
-      <div id="winnerName" style="font-size: 1.8rem; font-weight: 800; color: var(--accent); margin: 1rem 0;">TEAM A</div>
+      <div id="winnerName" style="font-size: 1.8rem; font-weight: 800; color: var(--accent); margin: 0.5rem 0 0.2rem 0;">TEAM A</div>
+      <div id="winnerPlayers" style="font-size: 1rem; font-weight: 600; color: var(--text-muted); margin-bottom: 1.2rem;">Player 1 & Player 2</div>
       <button class="btn btn-primary" onclick="closeWinnerModal()">Close Celebration</button>
     </div>
   </div>
@@ -1130,6 +1156,7 @@
 
       const courtSelect = document.getElementById('court-filter');
       const scoringCourtSelect = document.getElementById('scoring-court-filter');
+      const teamSelect = document.getElementById('team-filter');
       
       courtSelect.innerHTML = '<option value="ALL">All Courts</option>';
       scoringCourtSelect.innerHTML = '<option value="ALL">All Courts</option>';
@@ -1139,6 +1166,16 @@
         courtSelect.innerHTML += `<option value="${c}">${c}</option>`; 
         scoringCourtSelect.innerHTML += `<option value="${c}">${c}</option>`; 
       });
+
+      // Populate Team Filter (Feature 5)
+      if (teamSelect) {
+        teamSelect.innerHTML = '<option value="ALL">All Teams</option>';
+        const teamsObj = (localData.teams || {})[currentTournamentId] || {};
+        const sortedTeams = Object.values(teamsObj).sort((a,b) => (a.name||'').localeCompare(b.name||''));
+        sortedTeams.forEach(t => {
+          teamSelect.innerHTML += `<option value="${t.name}">${t.name}</option>`;
+        });
+      }
 
       checkTournamentChampion();
       renderStandingsAndGroups();
@@ -1151,14 +1188,20 @@
       db.ref(`tournaments/${currentTournamentId}/status`).set(status);
     }
 
+    // FEATURE 4: SHOW PLAYER NAME IN WINNER BANNER
     function checkTournamentChampion() {
       const scoresObj = (localData.scores || {})[currentTournamentId] || {};
       const fixturesObj = (localData.fixtures || {})[currentTournamentId] || {};
+      const teamsObj = (localData.teams || {})[currentTournamentId] || {};
       const finalFixture = fixturesObj['FINAL'];
       const finalScore = scoresObj['FINAL'];
 
       const topBanner = document.getElementById('top-champion-banner');
       const championNameEl = document.getElementById('top-champion-name');
+      const championPlayersEl = document.getElementById('top-champion-players');
+
+      const playerMap = {};
+      Object.values(teamsObj).forEach(t => { if(t && t.name) playerMap[t.name] = t.players || ''; });
 
       if (finalFixture && finalScore && finalScore.status === 'COMPLETED') {
         let winner = null;
@@ -1179,6 +1222,7 @@
         if (winner && !winner.includes('Winner')) {
           topBanner.style.display = 'block';
           championNameEl.innerText = winner;
+          championPlayersEl.innerText = playerMap[winner] ? `Players: ${playerMap[winner]}` : '';
           return;
         }
       }
@@ -1377,8 +1421,10 @@
       });
     }
 
+    // FEATURE 5: FILTER BY TEAM IN SCHEDULE MATCHES
     function renderInteractiveMatches() {
       const selectedCourt = document.getElementById('court-filter').value;
+      const selectedTeam = document.getElementById('team-filter') ? document.getElementById('team-filter').value : 'ALL';
       const fixturesObj = (localData.fixtures || {})[currentTournamentId] || {};
       const scoresObj = (localData.scores || {})[currentTournamentId] || {};
       const teamsObj = (localData.teams || {})[currentTournamentId] || {};
@@ -1398,6 +1444,10 @@
 
       if (selectedCourt !== 'ALL') {
         matches = matches.filter(m => m.court === selectedCourt);
+      }
+
+      if (selectedTeam !== 'ALL') {
+        matches = matches.filter(m => m.teamA === selectedTeam || m.teamB === selectedTeam);
       }
 
       matches = sortMatchesChronologicallyAndByStage(matches);
@@ -1468,6 +1518,7 @@
       if (counts.comp === 0) compContainer.innerHTML = emptyMsg("No completed matches yet.");
     }
 
+    // FEATURE 2: ADD SHUTTLE MARK FOR SERVING / POINT WINNER TEAM
     function renderScoringPanel() {
       if (userRole !== 'admin' && userRole !== 'scorer') return;
 
@@ -1519,6 +1570,7 @@
         const s = scoresObj[f.id] || {};
         const status = s.status || 'SCHEDULED';
         const activeSet = s.activeSet || 's1';
+        const servingTeam = s.servingTeam || 'A'; // Defaults to Team A serving
         const isMatchInProgress = status === 'IN_PROGRESS';
         const isCompleted = status === 'COMPLETED';
 
@@ -1533,28 +1585,42 @@
 
         let scoreControlHtml = '';
 
+        // Helper to render shuttle mark
+        const shuttleHtml = (teamKey) => {
+          const isServing = servingTeam === teamKey;
+          return `<span class="shuttle-badge ${isServing ? '' : 'shuttle-inactive'}" 
+                        title="${isServing ? 'Serving / Point Winner' : 'Click to assign service'}" 
+                        onclick="setServingTeam('${f.id}', '${teamKey}')">🏸</span>`;
+        };
+
         if (f.type === 'single') {
           const scA = parseInt(s.scoreA || 0, 10);
           const scB = parseInt(s.scoreB || 0, 10);
           scoreControlHtml = `
             <div style="display:flex; gap:0.5rem; align-items:stretch; margin:0.2rem 0;">
               <div class="score-side-box ${scA > scB ? 'is-leading' : ''}">
-                <div class="team-title">${f.teamA} <span style="font-size:0.65rem; color:var(--text-muted); font-weight:normal;">${playerMap[f.teamA] ? `(${playerMap[f.teamA]})` : ''}</span></div>
+                <div class="team-title">
+                  <div>${f.teamA} ${shuttleHtml('A')}</div>
+                  <span style="font-size:0.65rem; color:var(--text-muted); font-weight:normal;">${playerMap[f.teamA] ? `(${playerMap[f.teamA]})` : ''}</span>
+                </div>
                 <div class="big-score-num">${scA}</div>
                 <div class="score-controls">
-                  <button class="btn-score" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', 'scoreA', ${scA - 1})">-</button>
-                  <button class="btn-score btn-score-add" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', 'scoreA', ${scA + 1})">+1</button>
+                  <button class="btn-score" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', 'scoreA', ${scA - 1}, 'A')">-</button>
+                  <button class="btn-score btn-score-add" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', 'scoreA', ${scA + 1}, 'A')">+1</button>
                 </div>
               </div>
 
               <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; font-weight:800; color:var(--text-muted); font-size:0.8rem;">VS</div>
 
               <div class="score-side-box ${scB > scA ? 'is-leading' : ''}">
-                <div class="team-title">${f.teamB} <span style="font-size:0.65rem; color:var(--text-muted); font-weight:normal;">${playerMap[f.teamB] ? `(${playerMap[f.teamB]})` : ''}</span></div>
+                <div class="team-title">
+                  <div>${f.teamB} ${shuttleHtml('B')}</div>
+                  <span style="font-size:0.65rem; color:var(--text-muted); font-weight:normal;">${playerMap[f.teamB] ? `(${playerMap[f.teamB]})` : ''}</span>
+                </div>
                 <div class="big-score-num">${scB}</div>
                 <div class="score-controls">
-                  <button class="btn-score" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', 'scoreB', ${scB - 1})">-</button>
-                  <button class="btn-score btn-score-add" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', 'scoreB', ${scB + 1})">+1</button>
+                  <button class="btn-score" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', 'scoreB', ${scB - 1}, 'B')">-</button>
+                  <button class="btn-score btn-score-add" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', 'scoreB', ${scB + 1}, 'B')">+1</button>
                 </div>
               </div>
             </div>`;
@@ -1585,22 +1651,22 @@
 
               <div style="display:flex; gap:0.5rem; align-items:stretch;">
                 <div class="score-side-box ${scA > scB ? 'is-leading' : ''}">
-                  <div class="team-title">${f.teamA}</div>
+                  <div class="team-title">${f.teamA} ${shuttleHtml('A')}</div>
                   <div class="big-score-num">${scA}</div>
                   <div class="score-controls">
-                    <button class="btn-score" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', '${fieldA}', ${scA - 1})">-</button>
-                    <button class="btn-score btn-score-add" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', '${fieldA}', ${scA + 1})">+1</button>
+                    <button class="btn-score" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', '${fieldA}', ${scA - 1}, 'A')">-</button>
+                    <button class="btn-score btn-score-add" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', '${fieldA}', ${scA + 1}, 'A')">+1</button>
                   </div>
                 </div>
 
                 <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; font-weight:800; color:var(--text-muted); font-size:0.75rem;">${activeSet.toUpperCase()}</div>
 
                 <div class="score-side-box ${scB > scA ? 'is-leading' : ''}">
-                  <div class="team-title">${f.teamB}</div>
+                  <div class="team-title">${f.teamB} ${shuttleHtml('B')}</div>
                   <div class="big-score-num">${scB}</div>
                   <div class="score-controls">
-                    <button class="btn-score" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', '${fieldB}', ${scB - 1})">-</button>
-                    <button class="btn-score btn-score-add" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', '${fieldB}', ${scB + 1})">+1</button>
+                    <button class="btn-score" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', '${fieldB}', ${scB - 1}, 'B')">-</button>
+                    <button class="btn-score btn-score-add" ${!allowScoringControls ? 'disabled' : ''} onclick="stepScore('${f.id}', '${fieldB}', ${scB + 1}, 'B')">+1</button>
                   </div>
                 </div>
               </div>
@@ -1639,6 +1705,11 @@
       }
     }
 
+    function setServingTeam(matchId, teamKey) {
+      if (!verifyPermission('scorer')) return;
+      db.ref(`scores/${currentTournamentId}/${matchId}/servingTeam`).set(teamKey);
+    }
+
     function updateSpecificSetStatus(matchId, setKey, newStatus) {
       if (!verifyPermission('scorer')) return;
       
@@ -1664,8 +1735,11 @@
       db.ref().update(updates);
     }
 
-    function stepScore(matchId, field, val) {
+    function stepScore(matchId, field, val, pointWinnerTeamKey) {
       if (val < 0) val = 0;
+      if (pointWinnerTeamKey) {
+        db.ref(`scores/${currentTournamentId}/${matchId}/servingTeam`).set(pointWinnerTeamKey);
+      }
       saveScore(matchId, field, val);
     }
 
@@ -1723,6 +1797,7 @@
       }
     }
 
+    // FEATURE 1 FIX: HANDLES SINGLE GROUP & MULTI-GROUP MAP
     function finalizeGroupStageAndMapQF() {
       if (!verifyPermission('scorer')) return;
 
@@ -1731,30 +1806,53 @@
       const groups = calculateGroupStandings();
       const groupKeys = Object.keys(groups).sort();
 
+      if (groupKeys.length === 0) {
+        return alert("No group standings found to finalize!");
+      }
+
+      const isSingleGroup = groupKeys.length === 1;
+
       if (koStart === 'AUTO') {
-        koStart = groupKeys.length >= 4 ? 'QF' : (groupKeys.length >= 2 ? 'SF' : 'FINAL');
+        if (isSingleGroup) {
+          koStart = (groups[groupKeys[0]].length >= 4) ? 'SF' : 'FINAL';
+        } else {
+          koStart = groupKeys.length >= 4 ? 'QF' : (groupKeys.length >= 2 ? 'SF' : 'FINAL');
+        }
       }
 
       const getTop = (gKey, idx) => (groups[gKey] && groups[gKey][idx]) ? groups[gKey][idx].name : `Rank ${idx+1} Group ${gKey}`;
       const updates = {};
 
-      if (koStart === 'QF') {
-        updates[`fixtures/${currentTournamentId}/QF1/teamA`] = getTop('A', 0);
-        updates[`fixtures/${currentTournamentId}/QF1/teamB`] = getTop('D', 1);
-        updates[`fixtures/${currentTournamentId}/QF2/teamA`] = getTop('B', 0);
-        updates[`fixtures/${currentTournamentId}/QF2/teamB`] = getTop('C', 1);
-        updates[`fixtures/${currentTournamentId}/QF3/teamA`] = getTop('A', 1);
-        updates[`fixtures/${currentTournamentId}/QF3/teamB`] = getTop('C', 0);
-        updates[`fixtures/${currentTournamentId}/QF4/teamA`] = getTop('B', 1);
-        updates[`fixtures/${currentTournamentId}/QF4/teamB`] = getTop('D', 0);
-      } else if (koStart === 'SF') {
-        updates[`fixtures/${currentTournamentId}/SF1/teamA`] = getTop('A', 0);
-        updates[`fixtures/${currentTournamentId}/SF1/teamB`] = getTop('B', 1);
-        updates[`fixtures/${currentTournamentId}/SF2/teamA`] = getTop('B', 0);
-        updates[`fixtures/${currentTournamentId}/SF2/teamB`] = getTop('A', 1);
-      } else if (koStart === 'FINAL') {
-        updates[`fixtures/${currentTournamentId}/FINAL/teamA`] = getTop('A', 0);
-        updates[`fixtures/${currentTournamentId}/FINAL/teamB`] = getTop('B', 0);
+      if (isSingleGroup) {
+        const gKey = groupKeys[0];
+        if (koStart === 'SF') {
+          updates[`fixtures/${currentTournamentId}/SF1/teamA`] = getTop(gKey, 0); // 1st
+          updates[`fixtures/${currentTournamentId}/SF1/teamB`] = getTop(gKey, 3); // 4th
+          updates[`fixtures/${currentTournamentId}/SF2/teamA`] = getTop(gKey, 1); // 2nd
+          updates[`fixtures/${currentTournamentId}/SF2/teamB`] = getTop(gKey, 2); // 3rd
+        } else if (koStart === 'FINAL') {
+          updates[`fixtures/${currentTournamentId}/FINAL/teamA`] = getTop(gKey, 0); // 1st
+          updates[`fixtures/${currentTournamentId}/FINAL/teamB`] = getTop(gKey, 1); // 2nd
+        }
+      } else {
+        if (koStart === 'QF') {
+          updates[`fixtures/${currentTournamentId}/QF1/teamA`] = getTop('A', 0);
+          updates[`fixtures/${currentTournamentId}/QF1/teamB`] = getTop('D', 1);
+          updates[`fixtures/${currentTournamentId}/QF2/teamA`] = getTop('B', 0);
+          updates[`fixtures/${currentTournamentId}/QF2/teamB`] = getTop('C', 1);
+          updates[`fixtures/${currentTournamentId}/QF3/teamA`] = getTop('A', 1);
+          updates[`fixtures/${currentTournamentId}/QF3/teamB`] = getTop('C', 0);
+          updates[`fixtures/${currentTournamentId}/QF4/teamA`] = getTop('B', 1);
+          updates[`fixtures/${currentTournamentId}/QF4/teamB`] = getTop('D', 0);
+        } else if (koStart === 'SF') {
+          updates[`fixtures/${currentTournamentId}/SF1/teamA`] = getTop('A', 0);
+          updates[`fixtures/${currentTournamentId}/SF1/teamB`] = getTop(groupKeys[1] || 'B', 1);
+          updates[`fixtures/${currentTournamentId}/SF2/teamA`] = getTop(groupKeys[1] || 'B', 0);
+          updates[`fixtures/${currentTournamentId}/SF2/teamB`] = getTop('A', 1);
+        } else if (koStart === 'FINAL') {
+          updates[`fixtures/${currentTournamentId}/FINAL/teamA`] = getTop('A', 0);
+          updates[`fixtures/${currentTournamentId}/FINAL/teamB`] = getTop(groupKeys[1] || 'B', 0);
+        }
       }
 
       db.ref().update(updates).then(() => {
@@ -1762,10 +1860,14 @@
       });
     }
 
+    // FEATURE 4: WINNER CELEBRATION MODAL WITH PLAYER NAMES
     function triggerFinalCelebration() {
       checkTournamentChampion();
       const championName = document.getElementById('top-champion-name').innerText;
+      const championPlayers = document.getElementById('top-champion-players').innerText;
+
       document.getElementById('winnerName').innerText = championName || "CHAMPIONS";
+      document.getElementById('winnerPlayers').innerText = championPlayers || "";
       document.getElementById('winnerModal').style.display = 'flex';
 
       if (typeof confetti === 'function') {
@@ -1775,6 +1877,109 @@
 
     function closeWinnerModal() {
       document.getElementById('winnerModal').style.display = 'none';
+    }
+
+    // FEATURE 3: EXPORT STANDINGS & SCHEDULE TO PDF
+    function exportDataToPDF() {
+      if (!window.jspdf) {
+        alert("PDF library loading... please try again in a moment.");
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const tourney = (localData.tournaments || {})[currentTournamentId] || {};
+      const tourneyName = tourney.name || "Tournament Report";
+
+      doc.setFontSize(16);
+      doc.setTextColor(30, 58, 138);
+      doc.text(tourneyName, 14, 15);
+
+      doc.setFontSize(9);
+      doc.setTextColor(100);
+      doc.text(`Venue: ${tourney.venue || 'TBD'} | Format: ${tourney.formatType || 'GROUP_KO'} | Generated: ${new Date().toLocaleDateString()}`, 14, 21);
+
+      let currentY = 28;
+
+      // 1. Group Standings
+      const groups = calculateGroupStandings();
+      const sortedGroupKeys = Object.keys(groups).sort();
+
+      if (sortedGroupKeys.length > 0) {
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text("Group Standings", 14, currentY);
+        currentY += 4;
+
+        sortedGroupKeys.forEach(gKey => {
+          const groupTeams = groups[gKey];
+          const tableData = groupTeams.map((t, idx) => [
+            `#${idx+1} ${t.name}`,
+            t.players || '-',
+            t.p, t.w, t.l, t.pf, t.pa, t.pts
+          ]);
+
+          doc.autoTable({
+            startY: currentY,
+            head: [[`Group ${gKey}`, 'Players', 'P', 'W', 'L', '+', '-', 'Pts']],
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: [30, 58, 138] },
+            styles: { fontSize: 8 }
+          });
+
+          currentY = doc.lastAutoTable.finalY + 8;
+        });
+      }
+
+      // 2. Fixtures & Schedule
+      const fixturesObj = (localData.fixtures || {})[currentTournamentId] || {};
+      const scoresObj = (localData.scores || {})[currentTournamentId] || {};
+      let matches = Object.keys(fixturesObj).map(k => ({ id: k, ...fixturesObj[k] }));
+      matches = sortMatchesChronologicallyAndByStage(matches);
+
+      if (matches.length > 0) {
+        if (currentY > 230) { doc.addPage(); currentY = 15; }
+
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text("Match Schedule & Results", 14, currentY);
+        currentY += 4;
+
+        const scheduleRows = matches.map(f => {
+          const s = scoresObj[f.id] || {};
+          let scoreText = '-';
+          if (f.type === 'single') {
+            scoreText = (s.scoreA !== undefined && s.scoreB !== undefined) ? `${s.scoreA} - ${s.scoreB}` : '-';
+          } else {
+            const sets = [];
+            if (s.s1a || s.s1b) sets.push(`${s.s1a||0}-${s.s1b||0}`);
+            if (s.s2a || s.s2b) sets.push(`${s.s2a||0}-${s.s2b||0}`);
+            if (s.s3a || s.s3b) sets.push(`${s.s3a||0}-${s.s3b||0}`);
+            scoreText = sets.length > 0 ? sets.join(', ') : '-';
+          }
+          return [
+            f.id,
+            f.stage,
+            `${f.teamA} vs ${f.teamB}`,
+            f.court || '-',
+            f.time || '-',
+            scoreText,
+            s.status || 'SCHEDULED'
+          ];
+        });
+
+        doc.autoTable({
+          startY: currentY,
+          head: [['Match ID', 'Stage', 'Teams', 'Court', 'Time', 'Score', 'Status']],
+          body: scheduleRows,
+          theme: 'grid',
+          headStyles: { fillColor: [16, 185, 129] },
+          styles: { fontSize: 8 }
+        });
+      }
+
+      doc.save(`${tourneyName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_report.pdf`);
     }
 
     function downloadExcelTemplate() {
@@ -1884,6 +2089,7 @@
       return `${hours}:${minsStr} ${ampm}`;
     }
 
+    // FEATURE 1 FIX: HANDLES FIXTURE GENERATION WHEN ONLY 1 SINGLE GROUP EXISTS
     function autoGenerateFixtures() {
       if (!verifyPermission('admin')) return;
       
@@ -1910,7 +2116,9 @@
       const numGroups = groupKeys.length;
 
       if (koStart === 'AUTO' && formatType !== 'ROUND_ROBIN') {
-        if (numGroups >= 4 || teamList.length >= 8) {
+        if (numGroups === 1) {
+          koStart = teamList.length >= 4 ? 'SF' : 'FINAL';
+        } else if (numGroups >= 4 || teamList.length >= 8) {
           koStart = 'QF';
         } else if (numGroups >= 2 || teamList.length >= 4) {
           koStart = 'SF';
@@ -1977,23 +2185,36 @@
       }
 
       if (formatType !== 'ROUND_ROBIN') {
-        if (koStart === 'QF') {
-          scheduleMatch('QF1', 'QF 1 (A1 vs D2)', 'Winner Group A', 'Runner-Up Group D', 'ko', 'KO');
-          scheduleMatch('QF2', 'QF 2 (B1 vs C2)', 'Winner Group B', 'Runner-Up Group C', 'ko', 'KO');
-          scheduleMatch('QF3', 'QF 3 (A2 vs C1)', 'Runner-Up Group A', 'Winner Group C', 'ko', 'KO');
-          scheduleMatch('QF4', 'QF 4 (B2 vs D1)', 'Runner-Up Group B', 'Winner Group D', 'ko', 'KO');
+        if (numGroups === 1) {
+          // Single Group Knockout Setup
+          const gName = groupKeys[0] || 'A';
+          if (koStart === 'SF') {
+            scheduleMatch('SF1', 'Semi Final 1', `1st Group ${gName}`, `4th Group ${gName}`, 'ko', 'KO');
+            scheduleMatch('SF2', 'Semi Final 2', `2nd Group ${gName}`, `3rd Group ${gName}`, 'ko', 'KO');
+            scheduleMatch('FINAL', 'Championship Final', 'Winner SF1', 'Winner SF2', 'ko', 'KO');
+          } else {
+            scheduleMatch('FINAL', 'Championship Final', `1st Group ${gName}`, `2nd Group ${gName}`, 'ko', 'KO');
+          }
+        } else {
+          // Multi-Group Knockout Setup
+          if (koStart === 'QF') {
+            scheduleMatch('QF1', 'QF 1 (A1 vs D2)', 'Winner Group A', 'Runner-Up Group D', 'ko', 'KO');
+            scheduleMatch('QF2', 'QF 2 (B1 vs C2)', 'Winner Group B', 'Runner-Up Group C', 'ko', 'KO');
+            scheduleMatch('QF3', 'QF 3 (A2 vs C1)', 'Runner-Up Group A', 'Winner Group C', 'ko', 'KO');
+            scheduleMatch('QF4', 'QF 4 (B2 vs D1)', 'Runner-Up Group B', 'Winner Group D', 'ko', 'KO');
 
-          scheduleMatch('SF1', 'Semi Final 1', 'Winner QF1', 'Winner QF2', 'ko', 'KO');
-          scheduleMatch('SF2', 'Semi Final 2', 'Winner QF3', 'Winner QF4', 'ko', 'KO');
-          scheduleMatch('FINAL', 'Championship Final', 'Winner SF1', 'Winner SF2', 'ko', 'KO');
-        } 
-        else if (koStart === 'SF') {
-          scheduleMatch('SF1', 'Semi Final 1', 'Winner Group A', 'Runner-Up Group B', 'ko', 'KO');
-          scheduleMatch('SF2', 'Semi Final 2', 'Winner Group B', 'Runner-Up Group A', 'ko', 'KO');
-          scheduleMatch('FINAL', 'Championship Final', 'Winner SF1', 'Winner SF2', 'ko', 'KO');
-        } 
-        else if (koStart === 'FINAL') {
-          scheduleMatch('FINAL', 'Championship Final', 'Winner Group A', 'Winner Group B', 'ko', 'KO');
+            scheduleMatch('SF1', 'Semi Final 1', 'Winner QF1', 'Winner QF2', 'ko', 'KO');
+            scheduleMatch('SF2', 'Semi Final 2', 'Winner QF3', 'Winner QF4', 'ko', 'KO');
+            scheduleMatch('FINAL', 'Championship Final', 'Winner SF1', 'Winner SF2', 'ko', 'KO');
+          } 
+          else if (koStart === 'SF') {
+            scheduleMatch('SF1', 'Semi Final 1', 'Winner Group A', 'Runner-Up Group B', 'ko', 'KO');
+            scheduleMatch('SF2', 'Semi Final 2', 'Winner Group B', 'Runner-Up Group A', 'ko', 'KO');
+            scheduleMatch('FINAL', 'Championship Final', 'Winner SF1', 'Winner SF2', 'ko', 'KO');
+          } 
+          else if (koStart === 'FINAL') {
+            scheduleMatch('FINAL', 'Championship Final', 'Winner Group A', 'Winner Group B', 'ko', 'KO');
+          }
         }
       }
 
