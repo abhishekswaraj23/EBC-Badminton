@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- GitHub Pages cannot set response headers. This policy limits what this page can load. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.gstatic.com; connect-src 'self' https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com;">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>EBC Tournament Engine Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -150,6 +153,13 @@
     .status-live { background-color: #10B981; color: white; }
     .status-upcoming { background-color: #F59E0B; color: white; }
     .status-completed { background-color: #64748B; color: white; }
+
+    .staff-auth {
+      display: none;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .staff-auth input { width: 160px; }
 
     .container {
       max-width: 1280px;
@@ -642,6 +652,13 @@
     <div class="nav-actions">
       <!-- FEATURE 4: DARK MODE SWITCH BUTTON -->
       <button class="btn btn-outline btn-sm" id="dark-mode-toggle" onclick="toggleDarkMode()">🌙 Dark Mode</button>
+      <button class="btn btn-outline btn-sm" id="staff-login-toggle" onclick="toggleStaffLogin()">Staff sign in</button>
+      <div class="staff-auth" id="staff-auth">
+        <input class="form-control" id="staff-email" type="email" autocomplete="username" placeholder="Email">
+        <input class="form-control" id="staff-password" type="password" autocomplete="current-password" placeholder="Password">
+        <button class="btn btn-primary btn-sm" onclick="signInStaff()">Sign in</button>
+        <button class="btn btn-outline btn-sm" id="staff-signout" style="display:none" onclick="signOutStaff()">Sign out</button>
+      </div>
       <span id="role-indicator" class="status-pill status-viewer">VIEWER MODE</span>
       <span id="live-indicator" class="status-pill status-upcoming">UPCOMING</span>
     </div>
@@ -913,28 +930,27 @@
     let userRole = "viewer"; 
     let localData = { tournaments: {}, teams: {}, fixtures: {}, scores: {} };
     let activeStageFilter = 'ALL';
+    let dataListenerStarted = false;
 
     const STAGE_PRIORITY = { 'GRP': 1, 'QF': 2, 'SF': 3, 'FINAL': 4 };
 
     window.addEventListener('DOMContentLoaded', () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const adminParam = urlParams.get('admin');
-      const roleParam = urlParams.get('role');
-      const adminPass ='ebcadmin@123';
-      const scorerPass ='ebcscorer123';
-
-      if (adminParam === adminPass) {
-        userRole = 'admin';
-      } else if (roleParam === scorerPass || adminParam === scorerPass) {
-        userRole = 'scorer';
-      } else {
-        userRole = 'viewer';
-      }
-
       applyRoleUI();
+      startDataListener();
+      auth.onAuthStateChanged(async (user) => {
+        userRole = 'viewer';
+        if (user) {
+          const roleSnapshot = await db.ref(`roles/${user.uid}`).once('value');
+          const role = roleSnapshot.val();
+          if (role === 'admin' || role === 'scorer') userRole = role;
+        }
+        applyRoleUI();
+      });
+    });
 
-      auth.signInAnonymously().catch(err => console.error("Firebase Anonymous Auth Error:", err));
-
+    function startDataListener() {
+      if (dataListenerStarted) return;
+      dataListenerStarted = true;
       db.ref().on('value', (snapshot) => {
         const val = snapshot.val() || {};
         localData = val;
@@ -954,7 +970,30 @@
         populateTournamentDropdown();
         renderActiveTournament();
       });
-    });
+    }
+
+    function toggleStaffLogin() {
+      const panel = document.getElementById('staff-auth');
+      panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    async function signInStaff() {
+      const email = document.getElementById('staff-email').value.trim();
+      const password = document.getElementById('staff-password').value;
+      if (!email || !password) return alert('Enter your staff email and password.');
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        document.getElementById('staff-password').value = '';
+        document.getElementById('staff-auth').style.display = 'none';
+      } catch (error) {
+        alert('Sign-in failed. Check your email and password.');
+      }
+    }
+
+    async function signOutStaff() {
+      await auth.signOut();
+      document.getElementById('staff-auth').style.display = 'none';
+    }
 
     // FEATURE 4: TOGGLE DARK MODE FUNCTION
     function toggleDarkMode() {
@@ -969,6 +1008,12 @@
     function applyRoleUI() {
       const roleInd = document.getElementById('role-indicator');
       const mainTabsHeader = document.getElementById('main-tabs-header');
+      const loginButton = document.getElementById('staff-login-toggle');
+      const signOutButton = document.getElementById('staff-signout');
+
+      loginButton.style.display = 'inline-flex';
+      loginButton.innerText = auth.currentUser ? 'Staff account' : 'Staff sign in';
+      signOutButton.style.display = auth.currentUser ? 'inline-flex' : 'none';
 
       if (userRole === 'admin') {
         roleInd.className = "status-pill status-admin";
