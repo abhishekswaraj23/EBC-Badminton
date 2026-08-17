@@ -15,6 +15,20 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
   <style>
+    /* FIX 1: HIDE CONTAINER UNTIL DATA IS FULLY LOADED */
+    #app-container {
+      display: none;
+    }
+    #loading-screen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main, #F8FAFC);
+    }
+
     /* DEFAULT THEME: LUXURIOUS WARM DARK MODE */
     :root {
       --primary: #38BDF8;
@@ -758,10 +772,18 @@
 </head>
 <body>
 
+  <!-- FIX 1: LOADING SCREEN -->
+  <div id="loading-screen">⚡ Loading Tournament Data...</div>
+
+  <div id="app-container">
   <nav class="navbar">
     <div class="nav-brand">
       <img src="logo.png" alt="EBC Logo" class="ebc-logo">
+      <!-- FIX 2: DATE FILTER & TOURNAMENT SELECTION -->
       <div>
+        <label style="font-size:0.6rem; display:block; color:var(--text-muted); font-weight:700; letter-spacing:0.04em;">FILTER BY DATE</label>
+        <select id="date-selector" class="tournament-select" style="margin-bottom: 4px;" onchange="onDateSelected(this.value)"></select>
+        
         <label style="font-size:0.6rem; display:block; color:var(--text-muted); font-weight:700; letter-spacing:0.04em;">SELECT TOURNAMENT</label>
         <div style="display:flex; gap:6px; align-items:center;">
           <select id="tournament-selector" class="tournament-select" onchange="switchTournament(this.value)"></select>
@@ -786,60 +808,59 @@
       <button class="main-tab-btn admin-only-element" id="tab-manage-btn" onclick="showMainTab('manage-view', this)">⚙️ Setup & Teams</button>
     </div>
 
-    <!-- TOURNAMENT WINNER DISPLAY -->
-    <div id="top-champion-banner" class="champion-banner">
-      <h2>🏆 TOURNAMENT CHAMPION</h2>
-      <p id="top-champion-name">Team Name</p>
-      <div id="top-champion-players" class="champion-players"></div>
-    </div>
-
-    <div class="event-banner">
-      <div>
-        <h1 id="banner-title">Loading...</h1>
-        <div class="meta-list">
-          <span id="banner-venue">📍 Venue: -</span>
-          <span id="banner-format-type">⚙️ Format: -</span>
-          <span id="banner-ko-start">🏆 Knockout: -</span>
-          <span id="banner-rules-grp">📋 Group Rules: -</span>
-          <span id="banner-rules-ko">🥇 Knockout Rules: -</span>
-        </div>
-      </div>
-      <div style="display:flex; gap:6px; align-items:center;">
-        <button class="btn btn-outline btn-sm" id="btn-toggle-rules" onclick="toggleRulesCard()">📜 Show Rules & Regulations</button>
-        <div id="status-action-container" style="display:flex; gap:6px; align-items:center;"></div>
-      </div>
-    </div>
-
-    <!-- TOURNAMENT RULES & REGULATIONS CARD (TOGGLEABLE) -->
-    <div id="tournament-rules-card" class="rules-card">
-      <div class="rules-header">
-        <h3>📜 Official Tournament Rules & Regulations</h3>
-        <button class="btn btn-outline btn-sm" onclick="toggleRulesCard()">Close ✕</button>
-      </div>
-      <div class="rules-grid">
-        <div>
-          <div class="rules-section-title">Match Format & Scoring Rules</div>
-          <ul class="rules-list" id="rules-format-list">
-            <!-- Dynamic auto-filled content -->
-          </ul>
-        </div>
-        <div>
-          <div class="rules-section-title">General Regulations & Etiquette</div>
-          <ul class="rules-list" id="rules-general-list">
-            <!-- Dynamic auto-filled content -->
-          </ul>
-        </div>
-        <div>
-          <div class="rules-section-title">Additional Regulations</div>
-          <ul class="rules-list" id="rules-custom-list">
-            <!-- Custom admin rules -->
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <!-- VIEW 1: SPECTATOR DASHBOARD -->
+    <!-- FIX 3: CHAMPION BANNER INSIDE VIEWER-VIEW ONLY -->
     <div id="viewer-view" class="tab-view active">
+      <div id="top-champion-banner" class="champion-banner">
+        <h2>🏆 TOURNAMENT CHAMPION</h2>
+        <p id="top-champion-name">Team Name</p>
+        <div id="top-champion-players" class="champion-players"></div>
+      </div>
+
+      <div class="event-banner">
+        <div>
+          <h1 id="banner-title">Loading...</h1>
+          <div class="meta-list">
+            <span id="banner-venue">📍 Venue: -</span>
+            <span id="banner-format-type">⚙️ Format: -</span>
+            <span id="banner-ko-start">🏆 Knockout: -</span>
+            <span id="banner-rules-grp">📋 Group Rules: -</span>
+            <span id="banner-rules-ko">🥇 Knockout Rules: -</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="btn btn-outline btn-sm" id="btn-toggle-rules" onclick="toggleRulesCard()">📜 Show Rules & Regulations</button>
+          <div id="status-action-container" style="display:flex; gap:6px; align-items:center;"></div>
+        </div>
+      </div>
+
+      <!-- TOURNAMENT RULES & REGULATIONS CARD (TOGGLEABLE) -->
+      <div id="tournament-rules-card" class="rules-card">
+        <div class="rules-header">
+          <h3>📜 Official Tournament Rules & Regulations</h3>
+          <button class="btn btn-outline btn-sm" onclick="toggleRulesCard()">Close ✕</button>
+        </div>
+        <div class="rules-grid">
+          <div>
+            <div class="rules-section-title">Match Format & Scoring Rules</div>
+            <ul class="rules-list" id="rules-format-list">
+              <!-- Dynamic auto-filled content -->
+            </ul>
+          </div>
+          <div>
+            <div class="rules-section-title">General Regulations & Etiquette</div>
+            <ul class="rules-list" id="rules-general-list">
+              <!-- Dynamic auto-filled content -->
+            </ul>
+          </div>
+          <div>
+            <div class="rules-section-title">Additional Regulations</div>
+            <ul class="rules-list" id="rules-custom-list">
+              <!-- Custom admin rules -->
+            </ul>
+          </div>
+        </div>
+      </div>
+
       <div class="sub-tabs">
         <button class="sub-tab-btn active" onclick="showSubTab('v-schedule', this)">🎾 Tournament Schedule</button>
         <button class="sub-tab-btn" onclick="showSubTab('v-standings', this)">📊 Groups & Knockout Tree</button>
@@ -932,6 +953,10 @@
           <div class="form-group">
             <label>Tournament Name</label>
             <input type="text" id="t-title" class="form-control" placeholder="EBC Spring Masters 2026">
+          </div>
+          <div class="form-group">
+            <label>Tournament Date</label>
+            <input type="date" id="t-date" class="form-control">
           </div>
           <div class="form-group">
             <label>Tournament Status</label>
@@ -1051,7 +1076,7 @@
       <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">🏆</div>
       <h2 style="margin: 0; color: var(--text-main); font-size: 1.4rem; font-weight:800;">TOURNAMENT CHAMPIONS</h2>
       <div id="winnerName" style="font-size: 1.8rem; font-weight: 800; color: var(--accent); margin: 0.5rem 0 0.2rem 0;">TEAM A</div>
-      <div id="winnerPlayers" style="font-size: 1rem; font-weight: 600; color: var(--text-muted); margin-bottom: 1.5rem;">Player 1 & Player 2</div>
+      <div id="winnerPlayers" style="font-size: 1.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 1.5rem;">Player 1 & Player 2</div>
       <button class="btn btn-primary" style="width:100%;" onclick="closeWinnerModal()">Close Celebration</button>
     </div>
   </div>
@@ -1075,6 +1100,7 @@
       </div>
     </div>
   </div>
+  </div> <!-- END #app-container -->
 
   <script>
     const firebaseConfig = {
@@ -1096,6 +1122,8 @@
     let userRole = "viewer"; 
     let localData = { tournaments: {}, teams: {}, fixtures: {}, scores: {} };
     let activeStageFilter = 'ALL';
+    let selectedDateFilter = 'ALL';
+    let initialLoadComplete = false;
 
     const STAGE_PRIORITY = { 'GRP': 1, 'QF': 2, 'SF': 3, 'FINAL': 4 };
 
@@ -1131,12 +1159,43 @@
           return;
         }
 
+        // FIX 2: DEFAULT TOURNAMENT LOGIC BASED ON DATE & SCHEDULE
         if (!currentTournamentId || !tourneys[currentTournamentId]) {
-          currentTournamentId = availableKeys[0];
+          const today = new Date().toISOString().split('T')[0];
+
+          // 1. Look for today's tournament
+          let targetKey = availableKeys.find(k => tourneys[k].date === today);
+
+          // 2. Look for future scheduled tournament nearest to today
+          if (!targetKey) {
+            const futureKeys = availableKeys
+              .filter(k => tourneys[k].date && tourneys[k].date > today)
+              .sort((a, b) => tourneys[a].date.localeCompare(tourneys[b].date));
+            if (futureKeys.length > 0) targetKey = futureKeys[0];
+          }
+
+          // 3. Fallback to latest past tournament
+          if (!targetKey) {
+            const pastKeys = availableKeys
+              .filter(k => tourneys[k].date)
+              .sort((a, b) => tourneys[b].date.localeCompare(tourneys[a].date));
+            if (pastKeys.length > 0) targetKey = pastKeys[0];
+          }
+
+          // 4. Default to first available key
+          currentTournamentId = targetKey || availableKeys[0];
         }
 
+        populateDateDropdown();
         populateTournamentDropdown();
         renderActiveTournament();
+
+        // FIX 1: REVEAL INTERFACE ONCE DATA HAS INITIALIZED
+        if (!initialLoadComplete) {
+          initialLoadComplete = true;
+          document.getElementById('loading-screen').style.display = 'none';
+          document.getElementById('app-container').style.display = 'block';
+        }
       });
     });
 
@@ -1204,6 +1263,9 @@
         mainTabsHeader.style.display = "none";
         document.querySelectorAll('.admin-only-element').forEach(el => el.style.setProperty('display', 'none', 'important'));
         document.querySelectorAll('.scorer-or-admin-element').forEach(el => el.style.setProperty('display', 'none', 'important'));
+        
+        // FIX 3: ENSURE SPECTATOR DASHBOARD IS ACTIVE FOR VIEWERS
+        showMainTab('viewer-view', document.getElementById('tab-viewer-btn'));
       }
     }
 
@@ -1220,10 +1282,12 @@
     }
 
     function seedDefaultData() {
+      const today = new Date().toISOString().split('T')[0];
       const initialSeed = {
         tournaments: {
           "ebc_championship_2026": {
             name: "EBC Badminton Premier League 2026",
+            date: today,
             venue: "Wakud Sports Complex",
             courts: "Court 1, Court 2, Court 3, Court 4",
             formatType: "GROUP_KO",
@@ -1334,7 +1398,7 @@
       document.querySelectorAll('.main-tab-btn').forEach(e => e.classList.remove('active'));
 
       document.getElementById(viewId).classList.add('active');
-      btn.classList.add('active');
+      if (btn) btn.classList.add('active');
     }
 
     function showSubTab(tabId, btn) {
@@ -1359,18 +1423,58 @@
       renderActiveTournament();
     }
 
+    // FIX 2: POPULATE DATE & TOURNAMENT DROPDOWNS
+    function populateDateDropdown() {
+      const dateSelector = document.getElementById('date-selector');
+      if (!dateSelector) return;
+      dateSelector.innerHTML = '<option value="ALL">All Dates</option>';
+      const tournaments = localData.tournaments || {};
+
+      const dates = new Set();
+      Object.values(tournaments).forEach(t => {
+        if (t.date) dates.add(t.date);
+      });
+
+      Array.from(dates).sort().reverse().forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.innerText = d;
+        if (d === selectedDateFilter) opt.selected = true;
+        dateSelector.appendChild(opt);
+      });
+    }
+
+    function onDateSelected(dateVal) {
+      selectedDateFilter = dateVal;
+      populateTournamentDropdown();
+      const selector = document.getElementById('tournament-selector');
+      if (selector.options.length > 0) {
+        switchTournament(selector.value);
+      }
+    }
+
     function populateTournamentDropdown() {
       const selector = document.getElementById('tournament-selector');
       selector.innerHTML = '';
       const tournaments = localData.tournaments || {};
 
-      Object.keys(tournaments).forEach(key => {
+      const keys = Object.keys(tournaments).filter(key => {
+        if (selectedDateFilter === 'ALL') return true;
+        return tournaments[key].date === selectedDateFilter;
+      });
+
+      keys.forEach(key => {
         const opt = document.createElement('option');
         opt.value = key;
-        opt.innerText = `${tournaments[key].name} (${tournaments[key].status || 'UPCOMING'})`;
+        const dateStr = tournaments[key].date ? ` [${tournaments[key].date}]` : '';
+        opt.innerText = `${tournaments[key].name}${dateStr} (${tournaments[key].status || 'UPCOMING'})`;
         if (key === currentTournamentId) opt.selected = true;
         selector.appendChild(opt);
       });
+
+      if (keys.length > 0 && (!currentTournamentId || !keys.includes(currentTournamentId))) {
+        currentTournamentId = keys[0];
+      }
     }
 
     function editSelectedTournament() {
@@ -1383,6 +1487,7 @@
       const tourney = (localData.tournaments || {})[currentTournamentId] || {};
       document.getElementById('t-id').value = currentTournamentId;
       document.getElementById('t-title').value = tourney.name || '';
+      document.getElementById('t-date').value = tourney.date || '';
       document.getElementById('t-status').value = tourney.status || 'UPCOMING';
       document.getElementById('t-venue').value = tourney.venue || '';
       document.getElementById('t-courts').value = tourney.courts || 'Court 1, Court 2';
@@ -1400,6 +1505,7 @@
 
       const rawId = document.getElementById('t-id').value.trim();
       const name = document.getElementById('t-title').value.trim();
+      const date = document.getElementById('t-date').value;
       const status = document.getElementById('t-status').value;
       const venue = document.getElementById('t-venue').value.trim();
       const courts = document.getElementById('t-courts').value.trim();
@@ -1417,6 +1523,7 @@
 
       const tournamentPayload = {
         name: name,
+        date: date || new Date().toISOString().split('T')[0],
         status: status,
         venue: venue || 'TBD',
         courts: courts || 'Court 1',
@@ -2209,326 +2316,29 @@
         if (groups['C'] && groups['C'][1]) updates[`fixtures/${currentTournamentId}/QF4/teamB`] = groups['C'][1].name;
       }
 
-      db.ref().update(updates)
-        .then(() => alert(`Group stage finalized! Knockout stage (${koStart}) updated.`))
-        .catch(err => alert("Error updating knockouts: " + err.message));
+      db.ref().update(updates).then(() => {
+        alert("Group Stage Finalized! Knockouts updated.");
+      });
     }
 
     function triggerFinalCelebration() {
       const modal = document.getElementById('winnerModal');
-      const winnerNameEl = document.getElementById('winnerName');
-      const winnerPlayersEl = document.getElementById('winnerPlayers');
-
-      const scoresObj = (localData.scores || {})[currentTournamentId] || {};
-      const fixturesObj = (localData.fixtures || {})[currentTournamentId] || {};
-      const teamsObj = (localData.teams || {})[currentTournamentId] || {};
-
-      const finalFixture = fixturesObj['FINAL'];
-      const finalScore = scoresObj['FINAL'];
-
-      if (!finalFixture || !finalScore) return;
-
-      const playerMap = {};
-      Object.values(teamsObj).forEach(t => { if(t && t.name) playerMap[t.name] = t.players || ''; });
-
-      let winner = "CHAMPION";
-      if (finalFixture.type === 'single') {
-        const scA = parseInt(finalScore.scoreA || 0, 10);
-        const scB = parseInt(finalScore.scoreB || 0, 10);
-        if (scA > scB) winner = finalFixture.teamA;
-        else if (scB > scA) winner = finalFixture.teamB;
-      } else {
-        let setsA = 0, setsB = 0;
-        if (parseInt(finalScore.s1a||0) > parseInt(finalScore.s1b||0)) setsA++; else if (parseInt(finalScore.s1b||0) > parseInt(finalScore.s1a||0)) setsB++;
-        if (parseInt(finalScore.s2a||0) > parseInt(finalScore.s2b||0)) setsA++; else if (parseInt(finalScore.s2b||0) > parseInt(finalScore.s2a||0)) setsB++;
-        if (parseInt(finalScore.s3a||0) > parseInt(finalScore.s3b||0)) setsA++; else if (parseInt(finalScore.s3a||0) < parseInt(finalScore.s3b||0)) setsB++;
-        if (setsA > setsB) winner = finalFixture.teamA;
-        else if (setsB > setsA) winner = finalFixture.teamB;
-      }
-
-      winnerNameEl.innerText = winner;
-      winnerPlayersEl.innerText = playerMap[winner] ? `Players: ${playerMap[winner]}` : '';
-
-      modal.style.display = 'flex';
-
+      const championNameEl = document.getElementById('top-champion-name');
+      const championPlayersEl = document.getElementById('top-champion-players');
+      
+      document.getElementById('winnerName').innerText = championNameEl.innerText;
+      document.getElementById('winnerPlayers').innerText = championPlayersEl.innerText;
+      
+      if (modal) modal.style.display = 'flex';
+      
       if (typeof confetti === 'function') {
-        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       }
     }
 
     function closeWinnerModal() {
-      document.getElementById('winnerModal').style.display = 'none';
-    }
-
-    function downloadExcelTemplate() {
-      const csvContent = "data:text/csv;charset=utf-8,Team Name,Players,Group\nSmashers,Alex & Bob,A\nShuttlers,Carl & Dan,A\nVolleys,Ethan & Frank,B\nDrivers,Greg & Hank,B";
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "ebc_teams_template.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function processExcelUpload() {
-      if (!verifyPermission('admin')) return;
-
-      const fileInput = document.getElementById('excel-file-input');
-      const file = fileInput.files[0];
-      if (!file) return alert("Please select an Excel or CSV file to upload.");
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheet = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheet];
-        const json = XLSX.utils.sheet_to_json(worksheet);
-
-        if (json.length === 0) return alert("Uploaded sheet is empty.");
-
-        const teamsPayload = {};
-        json.forEach((row, idx) => {
-          const tName = row['Team Name'] || row['Team'] || row['team'] || `Team ${idx+1}`;
-          const tPlayers = row['Players'] || row['Player'] || row['players'] || '';
-          const tGroup = (row['Group'] || row['group'] || 'A').toString().toUpperCase().trim();
-          const key = tName.replace(/[^a-zA-Z0-9]/g, '_');
-
-          teamsPayload[key] = { name: tName, players: tPlayers, group: tGroup };
-        });
-
-        db.ref(`teams/${currentTournamentId}`).set(teamsPayload)
-          .then(() => alert(`Successfully uploaded ${Object.keys(teamsPayload).length} teams!`))
-          .catch(err => alert("Error uploading teams: " + err.message));
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function batchAddTeamsText() {
-      if (!verifyPermission('admin')) return;
-
-      const text = document.getElementById('batch-teams-input').value.trim();
-      if (!text) return alert("Please paste team data in the text area.");
-
-      const lines = text.split('\n');
-      const teamsPayload = {};
-
-      lines.forEach((line, idx) => {
-        const parts = line.split('|').map(s => s.trim());
-        if (parts[0]) {
-          const tName = parts[0];
-          const tPlayers = parts[1] || '';
-          const tGroup = (parts[2] || 'A').toUpperCase();
-          const key = tName.replace(/[^a-zA-Z0-9]/g, '_');
-          teamsPayload[key] = { name: tName, players: tPlayers, group: tGroup };
-        }
-      });
-
-      db.ref(`teams/${currentTournamentId}`).set(teamsPayload)
-        .then(() => alert(`Saved ${Object.keys(teamsPayload).length} teams!`))
-        .catch(err => alert("Error saving teams: " + err.message));
-    }
-
-    function autoGenerateFixtures() {
-      if (!verifyPermission('admin')) return;
-
-      const tourney = (localData.tournaments || {})[currentTournamentId] || {};
-      const teamsObj = (localData.teams || {})[currentTournamentId] || {};
-      const teamsList = Object.values(teamsObj);
-
-      if (teamsList.length < 2) return alert("At least 2 teams are required to generate fixtures.");
-
-      const startTimeStr = document.getElementById('gen-time').value || "09:00 AM";
-      const courts = (tourney.courts || "Court 1, Court 2").split(',').map(c => c.trim());
-      const formatType = tourney.formatType || 'GROUP_KO';
-      const rulesGroup = tourney.rulesGroup || '1 Set (21 Pts)';
-      const rulesKO = tourney.rulesKO || 'Best of 3 (21 Pts)';
-      let koStart = tourney.koStart || 'AUTO';
-
-      const matchTypeGroup = rulesGroup.includes('Best of 3') ? 'sets' : 'single';
-      const matchTypeKO = rulesKO.includes('Best of 3') ? 'sets' : 'single';
-
-      const fixtures = {};
-      const scores = {};
-      let matchCounter = 1;
-      let courtIdx = 0;
-
-      if (formatType !== 'PURE_KO') {
-        const groups = {};
-        teamsList.forEach(t => {
-          const g = t.group || 'A';
-          if (!groups[g]) groups[g] = [];
-          groups[g].push(t.name);
-        });
-
-        Object.keys(groups).sort().forEach(gKey => {
-          const gTeams = groups[gKey];
-          for (let i = 0; i < gTeams.length; i++) {
-            for (let j = i + 1; j < gTeams.length; j++) {
-              const matchId = `M${matchCounter}`;
-              const assignedCourt = courts[courtIdx % courts.length];
-
-              fixtures[matchId] = {
-                id: matchId,
-                stage: `Group ${gKey}`,
-                group: gKey,
-                teamA: gTeams[i],
-                teamB: gTeams[j],
-                court: assignedCourt,
-                time: startTimeStr,
-                type: matchTypeGroup,
-                matchOrder: matchCounter
-              };
-
-              scores[matchId] = matchTypeGroup === 'single'
-                ? { scoreA: 0, scoreB: 0, status: 'SCHEDULED' }
-                : { s1a:0, s1b:0, s2a:0, s2b:0, s3a:0, s3b:0, activeSet:'s1', s1Status:'ACTIVE', status:'SCHEDULED' };
-
-              matchCounter++;
-              courtIdx++;
-            }
-          }
-        });
-      }
-
-      const numGroups = new Set(teamsList.map(t => t.group || 'A')).size;
-
-      if (koStart === 'AUTO') {
-        if (formatType === 'PURE_KO') {
-          koStart = teamsList.length > 4 ? 'QF' : 'SF';
-        } else {
-          koStart = numGroups >= 4 ? 'QF' : (numGroups === 1 && teamsList.length < 4 ? 'FINAL' : 'SF');
-        }
-      }
-
-      if (formatType !== 'ROUND_ROBIN') {
-        if (koStart === 'QF') {
-          ['QF1', 'QF2', 'QF3', 'QF4'].forEach((qfId, idx) => {
-            fixtures[qfId] = { id: qfId, stage: 'Quarter Final', group: 'KO', teamA: `TBD (${qfId})`, teamB: `TBD (${qfId})`, court: courts[(courtIdx + idx) % courts.length], time: startTimeStr, type: matchTypeKO, matchOrder: matchCounter++ };
-            scores[qfId] = matchTypeKO === 'single' ? { scoreA:0, scoreB:0, status:'SCHEDULED' } : { s1a:0, s1b:0, s2a:0, s2b:0, s3a:0, s3b:0, activeSet:'s1', s1Status:'ACTIVE', status:'SCHEDULED' };
-          });
-        }
-
-        if (koStart === 'QF' || koStart === 'SF') {
-          ['SF1', 'SF2'].forEach((sfId, idx) => {
-            fixtures[sfId] = { id: sfId, stage: 'Semi Final', group: 'KO', teamA: `Winner ${sfId}`, teamB: `Winner ${sfId}`, court: courts[(courtIdx + idx) % courts.length], time: startTimeStr, type: matchTypeKO, matchOrder: matchCounter++ };
-            scores[sfId] = matchTypeKO === 'single' ? { scoreA:0, scoreB:0, status:'SCHEDULED' } : { s1a:0, s1b:0, s2a:0, s2b:0, s3a:0, s3b:0, activeSet:'s1', s1Status:'ACTIVE', status:'SCHEDULED' };
-          });
-        }
-
-        fixtures['FINAL'] = { id: 'FINAL', stage: 'Finals', group: 'KO', teamA: 'Winner SF1', teamB: 'Winner SF2', court: courts[0], time: startTimeStr, type: matchTypeKO, matchOrder: matchCounter++ };
-        scores['FINAL'] = matchTypeKO === 'single' ? { scoreA:0, scoreB:0, status:'SCHEDULED' } : { s1a:0, s1b:0, s2a:0, s2b:0, s3a:0, s3b:0, activeSet:'s1', s1Status:'ACTIVE', status:'SCHEDULED' };
-      }
-
-      Promise.all([
-        db.ref(`fixtures/${currentTournamentId}`).set(fixtures),
-        db.ref(`scores/${currentTournamentId}`).set(scores)
-      ])
-      .then(() => alert(`Successfully generated ${Object.keys(fixtures).length} fixtures!`))
-      .catch(err => alert("Error generating fixtures: " + err.message));
-    }
-
-    function clearFixtures() {
-      if (!verifyPermission('admin')) return;
-      if (!confirm("Are you sure you want to clear all fixtures and scores for this tournament?")) return;
-
-      Promise.all([
-        db.ref(`fixtures/${currentTournamentId}`).remove(),
-        db.ref(`scores/${currentTournamentId}`).remove()
-      ])
-      .then(() => alert("Fixtures cleared successfully."))
-      .catch(err => alert("Clear failed: " + err.message));
-    }
-
-    function resetCurrentScores() {
-      if (!verifyPermission('admin')) return;
-      if (!confirm("Are you sure you want to reset all match scores to zero?")) return;
-
-      const fixturesObj = (localData.fixtures || {})[currentTournamentId] || {};
-      const scoresPayload = {};
-
-      Object.keys(fixturesObj).forEach(k => {
-        const f = fixturesObj[k];
-        if (f.type === 'single') {
-          scoresPayload[k] = { scoreA: 0, scoreB: 0, status: 'SCHEDULED' };
-        } else {
-          scoresPayload[k] = { s1a:0, s1b:0, s2a:0, s2b:0, s3a:0, s3b:0, activeSet:'s1', s1Status:'ACTIVE', status:'SCHEDULED' };
-        }
-      });
-
-      db.ref(`scores/${currentTournamentId}`).set(scoresPayload)
-        .then(() => alert("Scores reset successfully."))
-        .catch(err => alert("Reset failed: " + err.message));
-    }
-
-    function exportDataToPDF() {
-      if (typeof jspdf === 'undefined' || !jspdf.jsPDF) {
-        return alert("PDF export library loading... Please try again in a moment.");
-      }
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const tourney = (localData.tournaments || {})[currentTournamentId] || {};
-
-      doc.setFontSize(16);
-      doc.text(tourney.name || "EBC Tournament Export", 14, 15);
-      doc.setFontSize(10);
-      doc.text(`Venue: ${tourney.venue || 'TBD'} | Format: ${tourney.formatType || 'GROUP_KO'}`, 14, 22);
-
-      let currentY = 30;
-
-      const groups = calculateGroupStandings();
-      Object.keys(groups).sort().forEach(gKey => {
-        doc.setFontSize(12);
-        doc.text(`Group ${gKey} Standings`, 14, currentY);
-        currentY += 4;
-
-        const tableData = groups[gKey].map((t, idx) => [
-          `#${idx+1} ${t.name}`,
-          t.players,
-          t.p, t.w, t.l, t.pf, t.pa, (t.pf - t.pa), t.pts
-        ]);
-
-        doc.autoTable({
-          startY: currentY,
-          head: [['Team', 'Players', 'P', 'W', 'L', '+', '-', '+/-', 'Pts']],
-          body: tableData,
-          theme: 'striped',
-          styles: { fontSize: 8 }
-        });
-
-        currentY = doc.lastAutoTable.finalY + 10;
-      });
-
-      const fixturesObj = (localData.fixtures || {})[currentTournamentId] || {};
-      const scoresObj = (localData.scores || {})[currentTournamentId] || {};
-
-      const fixtureRows = Object.values(fixturesObj).map(f => {
-        const s = scoresObj[f.id] || {};
-        let scoreStr = '-';
-        if (f.type === 'single') scoreStr = `${s.scoreA||0} - ${s.scoreB||0}`;
-        else scoreStr = `${s.s1a||0}-${s.s1b||0}, ${s.s2a||0}-${s.s2b||0}, ${s.s3a||0}-${s.s3b||0}`;
-
-        return [f.id, f.stage, `${f.teamA} vs ${f.teamB}`, f.court, scoreStr, s.status || 'SCHEDULED'];
-      });
-
-      if (fixtureRows.length > 0) {
-        if (currentY > 220) { doc.addPage(); currentY = 15; }
-        doc.setFontSize(12);
-        doc.text("Tournament Match Schedule & Results", 14, currentY);
-        currentY += 4;
-
-        doc.autoTable({
-          startY: currentY,
-          head: [['ID', 'Stage', 'Teams', 'Court', 'Score', 'Status']],
-          body: fixtureRows,
-          theme: 'grid',
-          styles: { fontSize: 8 }
-        });
-      }
-
-      doc.save(`${currentTournamentId}_report.pdf`);
+      const modal = document.getElementById('winnerModal');
+      if (modal) modal.style.display = 'none';
     }
   </script>
 </body>
