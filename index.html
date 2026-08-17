@@ -1143,6 +1143,7 @@
           authBtn.onclick = openAuthModal;
         }
         applyRoleUI();
+        renderActiveTournament();
       });
 
       db.ref().on('value', (snapshot) => {
