@@ -817,6 +817,7 @@
         <div>
           <h1 id="banner-title">Loading...</h1>
           <div class="meta-list">
+            <span id="banner-date">📅 Date: -</span>
             <span id="banner-venue">📍 Venue: -</span>
             <span id="banner-format-type">⚙️ Format: -</span>
             <span id="banner-ko-start">🏆 Knockout: -</span>
@@ -1568,6 +1569,20 @@
       const tourney = (localData.tournaments || {})[currentTournamentId] || {};
 
       document.getElementById('banner-title').innerText = tourney.name || 'Select or Create a Tournament';
+      // Format tourney.date to include the day of the week (e.g., "Sunday, Aug 23, 2026")
+      let dateDisplay = 'TBD';
+      if (tourney.date) {
+        const parsedDate = new Date(tourney.date);
+        if (!isNaN(parsedDate)) {
+          // Adjust options based on your preferred format
+          const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+          dateDisplay = parsedDate.toLocaleDateString('en-US', options);
+        } else {
+          dateDisplay = tourney.date; // Fallback to raw string if parsing fails
+        }
+      }
+
+      document.getElementById('banner-date').innerText = "📅 Date: " + dateDisplay;
       document.getElementById('banner-venue').innerText = "📍 Venue: " + (tourney.venue || 'TBD');
       document.getElementById('banner-format-type').innerText = "⚙️ Format: " + (tourney.formatType || 'GROUP_KO').replace('_', ' + ');
       document.getElementById('banner-ko-start').innerText = "🏆 Knockout: " + (tourney.koStart || 'AUTO');
