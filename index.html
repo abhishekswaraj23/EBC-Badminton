@@ -781,9 +781,6 @@
       <img src="logo.png" alt="EBC Logo" class="ebc-logo">
       <!-- FIX 2: DATE FILTER & TOURNAMENT SELECTION -->
       <div>
-        <label style="font-size:0.6rem; display:block; color:var(--text-muted); font-weight:700; letter-spacing:0.04em;">FILTER BY DATE</label>
-        <select id="date-selector" class="tournament-select" style="margin-bottom: 4px;" onchange="onDateSelected(this.value)"></select>
-        
         <label style="font-size:0.6rem; display:block; color:var(--text-muted); font-weight:700; letter-spacing:0.04em;">SELECT TOURNAMENT</label>
         <div style="display:flex; gap:6px; align-items:center;">
           <select id="tournament-selector" class="tournament-select" onchange="switchTournament(this.value)"></select>
@@ -1246,18 +1243,21 @@
       const mainTabsHeader = document.getElementById('main-tabs-header');
 
       if (userRole === 'admin') {
+        roleInd.style.display = "flex";
         roleInd.className = "status-pill status-admin";
         roleInd.innerText = "ADMIN MODE";
         mainTabsHeader.style.display = "flex";
         document.querySelectorAll('.admin-only-element').forEach(el => el.style.setProperty('display', 'inline-flex', 'important'));
         document.querySelectorAll('.scorer-or-admin-element').forEach(el => el.style.setProperty('display', 'inline-flex', 'important'));
       } else if (userRole === 'scorer') {
+        roleInd.style.display = "flex";
         roleInd.className = "status-pill status-scorer";
         roleInd.innerText = "SCORER MODE";
         mainTabsHeader.style.display = "flex";
         document.querySelectorAll('.admin-only-element').forEach(el => el.style.setProperty('display', 'none', 'important'));
         document.querySelectorAll('.scorer-or-admin-element').forEach(el => el.style.setProperty('display', 'inline-flex', 'important'));
       } else {
+        roleInd.style.display = "none";
         roleInd.className = "status-pill status-viewer";
         roleInd.innerText = "VIEWER MODE";
         mainTabsHeader.style.display = "none";
