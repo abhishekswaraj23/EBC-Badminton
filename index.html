@@ -2392,7 +2392,7 @@
 
     /* TIME & DISTRIBUTED ROUND ROBIN FIXTURE SCHEDULING */
     function parseStartTime(timeStr) {
-      if (!timeStr) timeStr = "09:00 AM";
+      if (!timeStr) timeStr = "07:00 PM";
       const parts = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
       if (!parts) return new Date(2026, 0, 1, 9, 0);
 
@@ -2516,7 +2516,7 @@
           orderedMatches.push(...roundMatches);
         }
 
-        // Schedule 15-minute slots across available courts safely avoiding overlap
+        // Schedule 10-minute slots across available courts safely avoiding overlap
         let matchCounter = 1;
         let currentSlotTime = new Date(baseDate.getTime());
         let courtIndex = 0;
@@ -2544,7 +2544,7 @@
           courtIndex++;
           if (courtIndex >= courts.length) {
             courtIndex = 0;
-            currentSlotTime = new Date(currentSlotTime.getTime() + 15 * 60000); // Shift 15 mins for next slot
+            currentSlotTime = new Date(currentSlotTime.getTime() + 10 * 60000); // Shift 10 mins for next slot
           }
         });
 
@@ -2642,7 +2642,7 @@
           court: courts[courtIndex],
           time: timeStr,
           scheduledTimestamp: currentSlotTime.getTime(),
-          type: isSingleSetKO ? 'single' : 'sets',
+          type: isSingleSetKO || stageLabel === 'QF' ? 'single' : 'sets',
           matchOrder: orderCounter++
         };
         scoresPayload[id] = createScoreItem(isSingleSetKO);
@@ -2650,15 +2650,15 @@
         courtIndex++;
         if (courtIndex >= courts.length) {
           courtIndex = 0;
-          currentSlotTime = new Date(currentSlotTime.getTime() + 15 * 60000);
+          currentSlotTime = new Date(currentSlotTime.getTime() + 10 * 60000);
         }
       };
 
       if (startStage === 'QF') {
-        addKOFixture('QF1', 'Quarter Finals', 'Winner GRP A', 'Runner-Up GRP B');
-        addKOFixture('QF2', 'Quarter Finals', 'Winner GRP C', 'Runner-Up GRP D');
-        addKOFixture('QF3', 'Quarter Finals', 'Winner GRP B', 'Runner-Up GRP A');
-        addKOFixture('QF4', 'Quarter Finals', 'Winner GRP D', 'Runner-Up GRP C');
+        addKOFixture('QF1', 'Quarter Finals', 'Winner GRP A', 'Winner GRP C');
+        addKOFixture('QF2', 'Quarter Finals', 'Winner GRP B', 'Winner GRP D');
+        addKOFixture('QF3', 'Quarter Finals', 'Winner GRP E', 'Winner GRP G');
+        addKOFixture('QF4', 'Quarter Finals', 'Winner GRP F', 'Winner GRP H');
 
         if (courtIndex !== 0) { currentSlotTime = new Date(currentSlotTime.getTime() + 15 * 60000); courtIndex = 0; }
         
@@ -2707,23 +2707,30 @@
       const updates = {};
 
       if (koStage === 'QF') {
-        const topA1 = groups['A'] && groups['A'][0] ? groups['A'][0].name : 'Winner GRP A';
-        const topA2 = groups['A'] && groups['A'][1] ? groups['A'][1].name : 'Runner-Up GRP A';
-        const topB1 = groups['B'] && groups['B'][0] ? groups['B'][0].name : 'Winner GRP B';
-        const topB2 = groups['B'] && groups['B'][1] ? groups['B'][1].name : 'Runner-Up GRP B';
-        const topC1 = groups['C'] && groups['C'][0] ? groups['C'][0].name : 'Winner GRP C';
-        const topC2 = groups['C'] && groups['C'][1] ? groups['C'][1].name : 'Runner-Up GRP C';
-        const topD1 = groups['D'] && groups['D'][0] ? groups['D'][0].name : 'Winner GRP D';
-        const topD2 = groups['D'] && groups['D'][1] ? groups['D'][1].name : 'Runner-Up GRP D';
+        const topA = groups['A'] && groups['A'][0] ? groups['A'][0].name : 'Winner GRP A';
+        
+        const topB = groups['B'] && groups['B'][0] ? groups['B'][0].name : 'Winner GRP B';
+        
+        const topC = groups['C'] && groups['C'][0] ? groups['C'][0].name : 'Winner GRP C';
+        
+        const topD = groups['D'] && groups['D'][0] ? groups['D'][0].name : 'Winner GRP D';
+        const topE = groups['E'] && groups['E'][0] ? groups['E'][0].name : 'Winner GRP E';
+        
+        const topF = groups['F'] && groups['F'][0] ? groups['F'][0].name : 'Winner GRP F';
+        
+        const topG = groups['G'] && groups['G'][0] ? groups['G'][0].name : 'Winner GRP G';
+        
+        const topH = groups['H'] && groups['H'][0] ? groups['H'][0].name : 'Winner GRP H';
+        
 
-        updates[`fixtures/${currentTournamentId}/QF1/teamA`] = topA1;
-        updates[`fixtures/${currentTournamentId}/QF1/teamB`] = topB2;
-        updates[`fixtures/${currentTournamentId}/QF2/teamA`] = topC1;
-        updates[`fixtures/${currentTournamentId}/QF2/teamB`] = topD2;
-        updates[`fixtures/${currentTournamentId}/QF3/teamA`] = topB1;
-        updates[`fixtures/${currentTournamentId}/QF3/teamB`] = topA2;
-        updates[`fixtures/${currentTournamentId}/QF4/teamA`] = topD1;
-        updates[`fixtures/${currentTournamentId}/QF4/teamB`] = topC2;
+        updates[`fixtures/${currentTournamentId}/QF1/teamA`] = topA;
+        updates[`fixtures/${currentTournamentId}/QF1/teamB`] = topC;
+        updates[`fixtures/${currentTournamentId}/QF2/teamA`] = topB;
+        updates[`fixtures/${currentTournamentId}/QF2/teamB`] = topD;
+        updates[`fixtures/${currentTournamentId}/QF3/teamA`] = topE;
+        updates[`fixtures/${currentTournamentId}/QF3/teamB`] = topG;
+        updates[`fixtures/${currentTournamentId}/QF4/teamA`] = topF;
+        updates[`fixtures/${currentTournamentId}/QF4/teamB`] = topH;
       } else if (koStage === 'SF') {
         const topA1 = groups['A'] && groups['A'][0] ? groups['A'][0].name : 'Winner GRP A';
         const topA2 = groups['A'] && groups['A'][1] ? groups['A'][1].name : 'Runner-Up GRP A';
