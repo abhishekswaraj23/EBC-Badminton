@@ -2642,7 +2642,7 @@
           court: courts[courtIndex],
           time: timeStr,
           scheduledTimestamp: currentSlotTime.getTime(),
-          type: isSingleSetKO || stageLabel === 'QF' ? 'single' : 'sets',
+          type: isSingleSetKO || stageLabel === 'Quarter Finals' ? 'single' : 'sets',
           matchOrder: orderCounter++
         };
         scoresPayload[id] = createScoreItem(isSingleSetKO);
